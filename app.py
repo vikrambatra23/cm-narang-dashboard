@@ -20,6 +20,13 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 .stDeployButton { display: none; }
 .block-container { padding: 1.5rem 2rem 4rem 2rem; max-width: 1000px; }
 
+/* Dark background */
+.stApp { background-color: #07101F !important; }
+section[data-testid="stSidebar"] { background-color: #0C1A2E !important; }
+[data-testid="stAppViewContainer"] { background-color: #07101F !important; }
+[data-testid="stHeader"] { background-color: #07101F !important; }
+p, div, span, label { color: #EAE3D6; }
+
 div[role="radiogroup"] { display: flex; gap: 6px; flex-wrap: wrap; }
 div[role="radiogroup"] label {
     background: #0C1A2E !important;
@@ -439,14 +446,27 @@ elif tab == "◉  Portfolio":
                 ◉ Conviction Core — Retain ₹75 L</div>
             <div style='font-size:12px; color:#7A8A9E; margin-bottom:16px; line-height:1.6;'>
                 Three high-conviction funds held as the anchor of your wealth. Never touch these.</div>
-            {"".join(f"""
             <div style='display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #152440;'>
                 <div style='display:flex; align-items:center; gap:8px;'>
                     <div style='width:6px; height:6px; border-radius:50%; background:#4EAF7A;'></div>
-                    <span style='font-size:12px; color:#EAE3D6;'>{f}</span>
+                    <span style='font-size:12px; color:#EAE3D6;'>DSP Small Cap</span>
                 </div>
                 <span style='font-size:10px; color:#4EAF7A;'>HOLD</span>
-            </div>""" for f in ["DSP Small Cap", "HDFC Midcap", "Invesco India"])}
+            </div>
+            <div style='display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #152440;'>
+                <div style='display:flex; align-items:center; gap:8px;'>
+                    <div style='width:6px; height:6px; border-radius:50%; background:#4EAF7A;'></div>
+                    <span style='font-size:12px; color:#EAE3D6;'>HDFC Midcap</span>
+                </div>
+                <span style='font-size:10px; color:#4EAF7A;'>HOLD</span>
+            </div>
+            <div style='display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #152440;'>
+                <div style='display:flex; align-items:center; gap:8px;'>
+                    <div style='width:6px; height:6px; border-radius:50%; background:#4EAF7A;'></div>
+                    <span style='font-size:12px; color:#EAE3D6;'>Invesco India</span>
+                </div>
+                <span style='font-size:10px; color:#4EAF7A;'>HOLD</span>
+            </div>
             <div style='margin-top:12px; font-family:"DM Mono",monospace; font-size:20px; color:#4E87D4;'>₹75 L</div>
         </div>
         """, unsafe_allow_html=True)
@@ -551,32 +571,15 @@ elif tab == "◎  Goals":
         """, unsafe_allow_html=True)
 
     # ── Projection scenarios ──────────────────────────────────────────────────
-    st.markdown(f"""
-    <div style='background:#0C1A2E; border:1px solid #2A3F58; border-radius:12px;
-        padding:16px 24px; margin-bottom:24px;'>
-        <div style='font-size:10px; color:#7A9BBF; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:14px;'>
-            Projected Corpus at Age 64 — Three Scenarios</div>
-        {"".join(f"""
-        <div style='margin-bottom:12px;'>
-            <div style='display:flex; justify-content:space-between; margin-bottom:4px;'>
-                <span style='font-size:11px; color:#7A8A9E;'>{label} ({rate}% equity)</span>
-                <span style='font-family:"DM Mono",monospace; font-size:13px; color:{color};'>{fmt_cr(val)}</span>
-            </div>
-            <div style='display:flex; height:8px; border-radius:4px; overflow:hidden; gap:2px;'>
-                <div style='flex:{eq_v}; background:#4EAF7A; border-radius:4px 0 0 4px;'></div>
-                <div style='flex:{debt_v}; background:#4E87D4; border-radius:0 4px 4px 0;'></div>
-            </div>
-            <div style='display:flex; justify-content:space-between; font-size:10px; color:#3E5068; margin-top:2px;'>
-                <span>Equity: {fmt_cr(eq_v * 1e7)}</span>
-                <span>Debt: ₹4.43 Cr</span>
-            </div>
-        </div>""" for label, rate, val, color, eq_v, debt_v in [
-            ("Conservative",  9, 9.97e7, "#7A9BBF", 5.54, 4.43),
-            ("Moderate",     11, 10.73e7, "#C8A84B", 6.30, 4.43),
-            ("Aggressive",   13, 11.61e7, "#4EAF7A", 7.18, 4.43),
-        ])}
-    </div>
-    """, unsafe_allow_html=True)
+    scenarios = [
+        ("Conservative",  9,  9.97e7, "#7A9BBF", 5.54, 4.43),
+        ("Moderate",     11, 10.73e7, "#C8A84B", 6.30, 4.43),
+        ("Aggressive",   13, 11.61e7, "#4EAF7A", 7.18, 4.43),
+    ]
+    scenario_rows = ""
+    for s_label, s_rate, s_val, s_color, s_eq, s_debt in scenarios:
+        scenario_rows += f"<div style='margin-bottom:12px;'><div style='display:flex; justify-content:space-between; margin-bottom:4px;'><span style='font-size:11px; color:#7A8A9E;'>{s_label} ({s_rate}% equity)</span><span style='font-family:\"DM Mono\",monospace; font-size:13px; color:{s_color};'>{fmt_cr(s_val)}</span></div><div style='display:flex; height:8px; border-radius:4px; overflow:hidden; gap:2px;'><div style='flex:{s_eq}; background:#4EAF7A; border-radius:4px 0 0 4px;'></div><div style='flex:{s_debt}; background:#4E87D4; border-radius:0 4px 4px 0;'></div></div><div style='display:flex; justify-content:space-between; font-size:10px; color:#3E5068; margin-top:2px;'><span>Equity: {fmt_cr(s_eq * 1e7)}</span><span>Debt: ₹4.43 Cr</span></div></div>"
+    st.markdown(f"<div style='background:#0C1A2E; border:1px solid #2A3F58; border-radius:12px; padding:16px 24px; margin-bottom:24px;'><div style='font-size:10px; color:#7A9BBF; text-transform:uppercase; letter-spacing:1.5px; margin-bottom:14px;'>Projected Corpus at Age 64 — Three Scenarios</div>{scenario_rows}</div>", unsafe_allow_html=True)
 
     # ── Other Goals ───────────────────────────────────────────────────────────
     st.markdown('<div style="font-size:11px; color:#A0B8D0; font-weight:600; margin-bottom:12px; letter-spacing:1.5px; text-transform:uppercase;">Other Goals</div>', unsafe_allow_html=True)
