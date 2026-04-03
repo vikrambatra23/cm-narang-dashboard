@@ -10,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# ── ROYAL UI STYLING ──────────────────────────────────────────────────────────
+# ── ROYAL UI STYLING (High Visibility & Gold Accents) ─────────────────────────
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
@@ -24,6 +24,16 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
 .stApp { background-color: #07101F !important; }
 [data-testid="stAppViewContainer"] { background-color: #07101F !important; }
 p, div, span, label { color: #EAE3D6; }
+
+/* GOLD GRADIENT TEXT FOR NET WORTH */
+.gold-text {
+    background: linear-gradient(to bottom, #C8A84B 0%, #E2CC8A 50%, #B38F36 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 700;
+    font-size: 68px !important;
+    letter-spacing: -1px;
+}
 
 /* Navigation */
 div[role="radiogroup"] { display: flex; gap: 8px; }
@@ -52,7 +62,7 @@ div[role="radiogroup"] label:has(input:checked) {
 .action-card-red { background: rgba(212, 88, 88, 0.08); border: 1px solid rgba(212, 88, 88, 0.4); border-left: 4px solid #D45858; border-radius: 12px; padding: 24px; min-height: 200px; }
 .action-card-green { background: rgba(78, 175, 122, 0.08); border: 1px solid rgba(78, 175, 122, 0.4); border-left: 4px solid #4EAF7A; border-radius: 12px; padding: 24px; min-height: 200px; }
 
-/* Wedding Strategy Box */
+/* Strategy Box */
 .strategy-box {
     background: rgba(200, 168, 75, 0.05);
     border: 1px dashed #C8A84B;
@@ -117,10 +127,10 @@ tab = st.radio("nav", ["Overview", "Portfolio", "Protection", "Actions"], horizo
 # ── TAB 1: OVERVIEW ───────────────────────────────────────────────────────────
 if tab == "Overview":
     st.markdown(f"""
-    <div style='background: linear-gradient(145deg, #0C1A2E, #112338); border: 1px solid #C8A84B40; border-radius: 20px; padding: 35px; text-align: center; margin-bottom: 25px;'>
+    <div style='background: linear-gradient(145deg, #0C1A2E, #112338); border: 1px solid #C8A84B40; border-radius: 20px; padding: 40px; text-align: center; margin-bottom: 25px;'>
         <p style='font-size: 11px; color: #7A9BBF; text-transform: uppercase; letter-spacing: 2px;'>Current Net Worth</p>
-        <h1 style='font-size: 56px; color: #C8A84B; margin: 5px 0;'>{fmt_cr(TOTAL_NW)}</h1>
-        <p style='font-size: 13px; color: #4EAF7A; margin-top: 5px;'>Target: ₹10 Cr by 2031 (Age 60)</p>
+        <h1 class='gold-text'>{fmt_cr(TOTAL_NW)}</h1>
+        <p style='font-size: 14px; color: #4EAF7A; margin-top: 10px;'>Target: ₹10 Cr by 2031 (Age 60)</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -131,13 +141,12 @@ if tab == "Overview":
             st.markdown(f"<div style='display:flex; justify-content:space-between; font-size:13px; margin-bottom:8px;'><span style='color:#7A9BBF;'>{asset}</span><span style='font-family:\"DM Mono\";'>{fmt_l(val)}</span></div>", unsafe_allow_html=True)
             st.markdown(f"<div style='background:#152440; height:3px; border-radius:2px; margin-bottom:12px;'><div style='background:#C8A84B; height:3px; width:{(val/TOTAL_NW)*100}%; border-radius:2px;'></div></div>", unsafe_allow_html=True)
         
-        # Wedding Goal Callout
         st.markdown(f"""
         <div class="strategy-box">
             <p style='color:#C8A84B; font-weight:600; font-size:12px; margin-bottom:5px;'>💍 WEDDING FUND STRATEGY</p>
             <p style='font-size:12px; color:#EAE3D6; line-height:1.5;'>
                 Moving <b>₹70L FD → Arbitrage</b>.<br>
-                <span style='color:#4EAF7A;'><b>Tax Win:</b></span> Arbitrage is taxed as Equity (12.5% LTCG) vs. FD (30%+ Slab). This saves ~₹1.6L - ₹2L in taxes annually for you.
+                <span style='color:#4EAF7A;'><b>Tax Win:</b></span> Arbitrage is taxed as Equity (12.5% LTCG) vs. FD (30%+ Slab). This saves ~₹2L in taxes annually.
             </p>
         </div>
         """, unsafe_allow_html=True)
@@ -151,7 +160,6 @@ if tab == "Overview":
 elif tab == "Portfolio":
     st.markdown("<p style='font-size:18px; color:#C8A84B; font-weight:500;'>Asset Distribution Profile</p>", unsafe_allow_html=True)
     
-    # Improved Pie Chart
     fig = go.Figure(go.Pie(
         labels=list(CMN["holdings"].keys()), 
         values=list(CMN["holdings"].values()), 
@@ -161,16 +169,9 @@ elif tab == "Portfolio":
         marker=dict(colors=['#52A2FF','#57C785','#FFB84D','#E2CC8A','#46C1C1'], 
                     line=dict(color='#07101F', width=3))
     ))
-    fig.update_layout(
-        paper_bgcolor='rgba(0,0,0,0)', 
-        plot_bgcolor='rgba(0,0,0,0)', 
-        showlegend=False,
-        margin=dict(t=30, b=30, l=10, r=10)
-    )
+    fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', showlegend=False)
     st.plotly_chart(fig, use_container_width=True)
 
-    # Legible Data Table
-    st.markdown("<br>", unsafe_allow_html=True)
     cols = st.columns(len(CMN["holdings"]))
     for i, (asset, val) in enumerate(CMN["holdings"].items()):
         cols[i].markdown(f"<div style='text-align:center;'><p style='font-size:10px; color:#7A9BBF; margin-bottom:5px;'>{asset}</p><p style='font-size:16px; color:#EAE3D6; font-weight:600;'>{fmt_l(val)}</p></div>", unsafe_allow_html=True)
@@ -205,8 +206,8 @@ elif tab == "Protection":
     </table>
     <div style='margin-top:10px; padding:10px; background:rgba(200, 168, 75, 0.05); border-radius:8px;'>
         <p style='font-size:10px; color:#7A9BBF; line-height:1.4;'>
-            * <b>What this conveys:</b> Estimates include cover for self and spouse. Final premium depends on DOB and disclosed medical history. 
-            Optima Secure includes the <i>'Secure'</i> benefit which doubles the base cover from Day 1.
+            * Estimates for CM + Ritu. Final quotes pending DOB/Medical disclosure. 
+            Includes <i>'Secure'</i> benefit which doubles base cover from Day 1.
         </p>
     </div>
     """, unsafe_allow_html=True)
