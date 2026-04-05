@@ -56,7 +56,6 @@ def fetch_data():
     df = conn.read(spreadsheet=URL)
     if 'Current Value' in df.columns:
         df['Val_Num'] = pd.to_numeric(df['Current Value'].astype(str).replace('[₹,L,Cr, ,]', '', regex=True), errors='coerce').fillna(0)
-    # Anti-Double Counting: Exclude summary lines
     assets = df[~df['Asset Name'].str.contains('Total|TOTAL|Sum|Subtotal', na=False)]
     return assets.dropna(subset=['Asset Name'])
 
@@ -80,8 +79,7 @@ if not st.session_state.logged_in:
     _, col, _ = st.columns([1, 1.2, 1])
     with col:
         st.markdown("<div style='text-align:center; padding:60px 0;'><h2 style='color:#C8A84B;'>◈ PRIVATE WEALTH</h2><p style='color:#7A9BBF;'>CHANDRA MOHAN NARANG</p></div>", unsafe_allow_html=True)
-        u = st.text_input("Username")
-        p = st.text_input("Password", type="password")
+        u, p = st.text_input("Username"), st.text_input("Password", type="password")
         if st.button("Sign In", use_container_width=True):
             if u == "cm.narang" and p == "Narang@2026":
                 st.session_state.logged_in = True
@@ -102,7 +100,25 @@ tab = st.radio("nav", ["Overview", "Portfolio", "Protection", "Actions"], horizo
 
 # ── TABS ──────────────────────────────────────────────────────────────────────
 if tab == "Overview":
-    st.markdown(f"<div style='background:#0C1A2E; border:1px solid #1C3050; border-radius:24px; padding:50px; text-align:center; margin-bottom:30px;'><p style='font-size:12px; color:#7A9BBF; text-transform:uppercase; letter-spacing:3px;'>Consolidated Net Worth</p><h1 class='gold-text'>{fmt_cr(total_nw)}</h1></div>", unsafe_allow_html=True)
+    # 10Cr SPEEDOMETER GAUGE
+    fig_gauge = go.Figure(go.Indicator(
+        mode = "gauge+number",
+        value = total_nw / 10000000, # Show value in Crores
+        number = {'suffix': " Cr", 'font': {'color': '#E2CC8A', 'size': 50}},
+        title = {'text': "GOAL PROGRESS: 10 CR JOURNEY", 'font': {'size': 12, 'color': '#7A9BBF'}},
+        gauge = {
+            'axis': {'range': [0, 10], 'tickwidth': 1, 'tickcolor': "#1C3050"},
+            'bar': {'color': "#C8A84B"},
+            'bgcolor': "#0C1A2E",
+            'borderwidth': 2,
+            'bordercolor': "#1C3050",
+            'steps': [{'range': [0, 10], 'color': '#0C1A2E'}],
+            'threshold': {'line': {'color': "white", 'width': 4}, 'thickness': 0.75, 'value': 10}
+        }
+    ))
+    fig_gauge.update_layout(height=300, paper_bgcolor='rgba(0,0,0,0)', margin=dict(t=50, b=20, l=20, r=20))
+    st.plotly_chart(fig_gauge, use_container_width=True)
+
     c1, c2 = st.columns([1, 1])
     with c1:
         fig = go.Figure(go.Pie(labels=list(OVERVIEW_MAP.keys()), values=list(OVERVIEW_MAP.values()), hole=0.7, marker=dict(colors=['#52A2FF','#57C785','#E2CC8A','#46C1C1','#A37CFF'])))
@@ -115,8 +131,12 @@ if tab == "Overview":
 
 elif tab == "Portfolio":
     st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Detailed Holding Inventory</p>", unsafe_allow_html=True)
+    
+    # Logic to sort by Allocation %
     disp = assets_df[['Asset Name', 'Category', 'Units / Qty', 'Current Value', 'Val_Num']].copy()
+    disp = disp.sort_values(by='Val_Num', ascending=False) # Sort by largest value first
     disp['Alloc %'] = (disp['Val_Num'] / total_nw * 100).round(1).astype(str) + '%'
+    
     html = "<table class='static-table'><thead><tr><th>Asset Name</th><th>Category</th><th>Qty</th><th>Value</th><th>Alloc %</th></tr></thead><tbody>"
     for _, r in disp.iterrows():
         html += f"<tr><td>{r['Asset Name']}</td><td>{r['Category']}</td><td>{r['Units / Qty']}</td><td>{fmt_l(r['Val_Num'])}</td><td>{r['Alloc %']}</td></tr>"
