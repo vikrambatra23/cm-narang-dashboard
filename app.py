@@ -43,14 +43,14 @@ def fmt_cr(n): return f"₹{n/1e7:.2f} Cr"
 def fmt_l(n):  return f"₹{n/1e5:.1f} L"
 
 # ── LIVE DATA CONNECTION ─────────────────────────────────────────────────────
-# Using the URL you provided
-URL = "https://docs.google.com/spreadsheets/d/1PZACfddE3VkcCWqYD-_0j_ERaBUT1SBQqPN63Vylvy0/edit#gid=1691255921"
+# Using the CLEAN URL to avoid '400 Bad Request' errors
+URL = "https://docs.google.com/spreadsheets/d/1PZACfddE3VkcCWqYD-_0j_ERaBUT1SBQqPN63Vylvy0/edit"
 
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-@st.cache_data(ttl=300) # Refreshes every 5 minutes
+@st.cache_data(ttl=300) 
 def fetch_data():
-    # Reading the 'Portfolio' worksheet
+    # Make sure the tab name in your Google Sheet is exactly "Portfolio"
     df = conn.read(spreadsheet=URL, worksheet="Portfolio")
     return df.dropna(subset=['Asset Name'])
 
@@ -60,7 +60,7 @@ try:
     data_df['Current Value'] = pd.to_numeric(data_df['Current Value'], errors='coerce').fillna(0)
     total_nw = data_df['Current Value'].sum()
     
-    # Overview Logic: Grouping categories
+    # Overview Logic: Grouping categories as requested
     mf_val = data_df[data_df['Category'].str.contains('Aggressive|Stable|Legacy', na=False)]['Current Value'].sum()
     etf_val = data_df[data_df['Category'].str.contains('New Core|New Global', na=False)]['Current Value'].sum()
     gold_val = data_df[data_df['Category'].str.contains('Commodities', na=False)]['Current Value'].sum()
@@ -123,13 +123,18 @@ if tab == "Overview":
 elif tab == "Portfolio":
     st.markdown("<p style='font-size:18px; color:#C8A84B; font-weight:500;'>Detailed Holdings Breakdown</p>", unsafe_allow_html=True)
     
+    # Filter columns to only what we need for the table
     display_df = data_df[['Asset Name', 'Category', 'Units / Qty', 'Current Value']].copy()
+    
+    # Calculate live allocation percentages
     display_df['Allocation %'] = (display_df['Current Value'] / total_nw * 100).round(2).astype(str) + '%'
+    
+    # Format the Value column into Lakhs
     display_df['Current Value'] = display_df['Current Value'].apply(fmt_l)
     
     st.dataframe(display_df, use_container_width=True, hide_index=True)
 
-# ── TABS 3 & 4: AS ORIGINALLY DEFINED ─────────────────────────────────────────
+# ── TABS 3 & 4 ───────────────────────────────────────────────────────────────
 elif tab == "Protection":
     st.info("Insurance Protection modules remain configured as per previous layout.")
 elif tab == "Actions":
