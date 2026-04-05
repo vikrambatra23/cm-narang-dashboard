@@ -60,23 +60,19 @@ def fetch_data():
 
 try:
     data_df = fetch_data()
-    
-    # ANTI-DOUBLE COUNTING LOGIC:
-    # We only count rows that DO NOT have the word "Total" in the Asset Name.
-    active_assets = data_df[~data_df['Asset Name'].str.contains('Total|TOTAL|Sum', na=False)]
-    # Also ignore rows where Current Value is 0
+    # Filter: Ignore rows containing "Total" to prevent double-counting
+    active_assets = data_df[~data_df['Asset Name'].str.contains('Total|TOTAL|Sum|Subtotal', na=False)]
     active_assets = active_assets[active_assets['Val_Num'] > 0]
-    
     total_nw = active_assets['Val_Num'].sum()
     
-    # Categorization
+    # Categories
     mf_v = active_assets[active_assets['Category'].str.contains('Aggressive|Stable|Legacy', na=False)]['Val_Num'].sum()
     etf_v = active_assets[active_assets['Category'].str.contains('New Core|New Global|New Stability', na=False)]['Val_Num'].sum()
     gold_v = active_assets[active_assets['Category'].str.contains('Commodities', na=False)]['Val_Num'].sum()
     fd_v = active_assets[active_assets['Category'].str.contains('Fixed Income', na=False)]['Val_Num'].sum()
     cash_v = active_assets[active_assets['Category'].str.contains('Liquid', na=False)]['Val_Num'].sum()
 
-    OVERVIEW_MAP = {"Mutual Funds": mf_v, "ETFs": etf_v, "Gold": gold_v, "Fixed Deposits": fd_v, "Cash": cash_v}
+    OVERVIEW_MAP = {"Mutual Funds": mf_v, "ETFs": etf_v, "Gold": gold_v, "Fixed Income": fd_v, "Cash": cash_v}
 except:
     st.stop()
 
@@ -122,22 +118,40 @@ elif tab == "Portfolio":
 
 # ── TAB 3: PROTECTION ─────────────────────────────────────────────────────────
 elif tab == "Protection":
-    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Insurance & Protection</p>", unsafe_allow_html=True)
-    cols = st.columns(3)
-    data = [("Term Life Cover", "₹5.0 Cr", "HDFC Life · Active"), ("Health Floater", "₹25.0 L", "Niva Bupa · Active"), ("Critical Illness", "₹50.0 L", "ICICI Lombard · Active")]
-    for i, (title, val, co) in enumerate(data):
-        with cols[i]:
-            st.markdown(f"<div style='background:#0C1A2E; padding:25px; border-radius:15px; border:1px solid #1C3050;'><p style='color:#7A9BBF; font-size:12px;'>{title}</p><h2 style='margin:0;'>{val}</h2><p style='color:#C8A84B; font-size:11px;'>{co}</p></div>", unsafe_allow_html=True)
-    st.markdown("<br><div style='background:rgba(82,162,255,0.05); padding:20px; border-radius:15px; border:1px solid #52A2FF30;'><p style='color:#52A2FF; font-weight:600;'>◈ Nominee Verification</p><p style='font-size:14px; color:#EAE3D6;'>All policies and investment folios are verified with <b>Shubha Jain</b> as 100% Nominee.</p></div>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Insurance Coverage Structure</p>", unsafe_allow_html=True)
+    
+    # Top Metrics
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown("<div style='background:#0C1A2E; padding:25px; border-radius:15px; border:1px solid #1C3050;'> <p style='color:#7A9BBF; font-size:12px;'>Term Life Cover</p> <h2 style='margin:0;'>₹1.00 Cr</h2> <p style='color:#C8A84B; font-size:11px;'>Primary Life Protection · Active</p> </div>", unsafe_allow_html=True)
+    with c2:
+        st.markdown("<div style='background:#0C1A2E; padding:25px; border-radius:15px; border:2px solid #C8A84B;'> <p style='color:#C8A84B; font-size:12px;'>Proposed Upgrade</p> <h2 style='margin:0;'>₹50.0 L</h2> <p style='color:#EAE3D6; font-size:11px;'>HDFC Ergo Optima Secure (Super Plus)</p> </div>", unsafe_allow_html=True)
+
+    # Health Floater Details
+    st.markdown("<br><p style='font-size:14px; color:#C8A84B; font-weight:600;'>Existing Health Floaters</p>", unsafe_allow_html=True)
+    f1, f2 = st.columns(2)
+    with f1:
+        st.markdown("<div style='background:#0C1A2E; padding:15px; border-radius:12px; border:1px solid #1C3050;'> <p style='color:#7A9BBF; font-size:11px;'>Floater 1 (Couple)</p> <p style='font-size:16px; margin:0;'>Active · No Claims</p> <p style='color:#57C785; font-size:11px;'>Cumulative Bonus Accrued</p> </div>", unsafe_allow_html=True)
+    with f2:
+        st.markdown("<div style='background:#0C1A2E; padding:15px; border-radius:12px; border:1px solid #1C3050;'> <p style='color:#7A9BBF; font-size:11px;'>Floater 2 (Incl. Son)</p> <p style='font-size:16px; margin:0;'>Active · No Claims</p> <p style='color:#57C785; font-size:11px;'>Cumulative Bonus Accrued</p> </div>", unsafe_allow_html=True)
+
+    st.markdown("""
+    <div style='background:rgba(200,168,75,0.05); padding:20px; border-radius:15px; border:1px solid #C8A84B30; margin-top:20px;'>
+        <p style='color:#C8A84B; font-weight:600; font-size:13px;'>◈ Advisor Recommendation</p>
+        <p style='font-size:13px; color:#EAE3D6;'>Proposed <b>HDFC Ergo Optima Secure (50L Base)</b>. <br>
+        Estimated Annual Premium: <b>₹38,000 - ₹45,000</b> (incl. GST) based on age. <br>
+        Key Benefit: 4X Secure Benefit immediately triples the cover to 2 Cr if needed.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ── TAB 4: ACTIONS ────────────────────────────────────────────────────────────
 elif tab == "Actions":
-    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Strategic Actions</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Strategic Action Items</p>", unsafe_allow_html=True)
     actions = [
-        ("Monthly SIP Execution", "₹7.0 L auto-debit scheduled for the 25th.", "Vikram Batra"),
-        ("Legacy Fund Exit", "Phased redemption of 'Legacy (Exit)' funds into NiftyBees.", "Vikram Batra"),
-        ("Quarterly Rebalancing", "Review asset weightage vs target allocation in July.", "CM Narang"),
-        ("Tax Efficiency", "Harvesting ₹1.25L LTCG before April 30th.", "Vikram Batra")
+        ("Upgrade Health Insurance", "Initiate HDFC Ergo Optima Secure (50L) for enhanced safety.", "Vikram Batra"),
+        ("Monthly Wealth Infusion", "Execute ₹7.0 L SIP on the 25th.", "Vikram Batra"),
+        ("Legacy Exit Plan", "Redeem Legacy (Exit) funds as per NAV targets into NiftyBees.", "Vikram Batra"),
+        ("Documentation", "Verify Floater 2 son's inclusion and bonus certificate.", "Vikram Batra")
     ]
     for act, desc, owner in actions:
-        st.markdown(f"<div style='padding:20px; border-bottom:1px solid #1C3050;'><div style='display:flex; justify-content:space-between;'><span style='color:#C8A84B; font-weight:600;'>{act}</span><span style='color:#7A9BBF; font-size:11px;'>{owner}</span></div><p style='font-size:13px; color:#EAE3D6; margin-top:5px;'>{desc}</p></div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='padding:20px; border-bottom:1px solid #1C3050;'> <div style='display:flex; justify-content:space-between;'><span style='color:#C8A84B; font-weight:600;'>{act}</span><span style='color:#7A9BBF; font-size:11px;'>{owner}</span></div> <p style='font-size:13px; color:#EAE3D6; margin-top:5px;'>{desc}</p> </div>", unsafe_allow_html=True)
