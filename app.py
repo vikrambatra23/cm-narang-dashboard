@@ -60,12 +60,12 @@ def fetch_data():
 
 try:
     data_df = fetch_data()
-    # Filter: Ignore rows containing "Total" to prevent double-counting
+    # Anti-Double Counting: Ignore rows with "Total" or empty names
     active_assets = data_df[~data_df['Asset Name'].str.contains('Total|TOTAL|Sum|Subtotal', na=False)]
-    active_assets = active_assets[active_assets['Val_Num'] > 0]
+    active_assets = active_assets[active_assets['Val_Num'] > 10] # Ignore dust values
     total_nw = active_assets['Val_Num'].sum()
     
-    # Categories
+    # Categorization
     mf_v = active_assets[active_assets['Category'].str.contains('Aggressive|Stable|Legacy', na=False)]['Val_Num'].sum()
     etf_v = active_assets[active_assets['Category'].str.contains('New Core|New Global|New Stability', na=False)]['Val_Num'].sum()
     gold_v = active_assets[active_assets['Category'].str.contains('Commodities', na=False)]['Val_Num'].sum()
@@ -116,42 +116,51 @@ elif tab == "Portfolio":
         html += f"<tr><td>{r['Asset Name']}</td><td>{r['Category']}</td><td>{r['Units / Qty']}</td><td>{fmt_l(r['Val_Num'])}</td><td>{r['Alloc %']}</td></tr>"
     st.markdown(html + "</tbody></table>", unsafe_allow_html=True)
 
-# ── TAB 3: PROTECTION ─────────────────────────────────────────────────────────
+# ── TAB 3: PROTECTION (UPDATED WITH POLICY DOC DETAILS) ───────────────────────
 elif tab == "Protection":
-    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Insurance Coverage Structure</p>", unsafe_allow_html=True)
+    # --- TERM LIFE SECTION ---
+    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Term Life Protection</p>", unsafe_allow_html=True)
+    st.markdown("<div style='background:#0C1A2E; padding:25px; border-radius:15px; border:1px solid #1C3050;'> <p style='color:#7A9BBF; font-size:12px;'>Sum Insured</p> <h2 style='margin:0;'>₹1.00 Crore</h2> <p style='color:#C8A84B; font-size:11px;'>Primary Policy · Active Nominee: Shubha Jain</p> </div>", unsafe_allow_html=True)
     
-    # Top Metrics
-    c1, c2 = st.columns(2)
-    with c1:
-        st.markdown("<div style='background:#0C1A2E; padding:25px; border-radius:15px; border:1px solid #1C3050;'> <p style='color:#7A9BBF; font-size:12px;'>Term Life Cover</p> <h2 style='margin:0;'>₹1.00 Cr</h2> <p style='color:#C8A84B; font-size:11px;'>Primary Life Protection · Active</p> </div>", unsafe_allow_html=True)
-    with c2:
-        st.markdown("<div style='background:#0C1A2E; padding:25px; border-radius:15px; border:2px solid #C8A84B;'> <p style='color:#C8A84B; font-size:12px;'>Proposed Upgrade</p> <h2 style='margin:0;'>₹50.0 L</h2> <p style='color:#EAE3D6; font-size:11px;'>HDFC Ergo Optima Secure (Super Plus)</p> </div>", unsafe_allow_html=True)
+    # --- HEALTH INSURANCE SECTION ---
+    st.markdown("<br><p style='font-size:20px; color:#C8A84B; font-weight:500;'>Family Health Shield</p>", unsafe_allow_html=True)
+    h1, h2 = st.columns(2)
+    with h1:
+        st.markdown("""
+        <div style='background:#0C1A2E; padding:20px; border-radius:12px; border:1px solid #1C3050;'>
+            <p style='color:#7A9BBF; font-size:11px;'>Star Comprehensive (Family)</p>
+            <p style='font-size:18px; margin:0;'>₹20.0 Lakhs</p>
+            <p style='color:#57C785; font-size:11px;'>Incl. 10L Loyalty Bonus · Covers Son</p>
+        </div>""", unsafe_allow_html=True)
+    with h2:
+        st.markdown("""
+        <div style='background:#0C1A2E; padding:20px; border-radius:12px; border:1px solid #1C3050;'>
+            <p style='color:#7A9BBF; font-size:11px;'>Niva Bupa ReAssure 2.0 (Couple)</p>
+            <p style='font-size:18px; margin:0;'>₹10.0 Lakhs</p>
+            <p style='color:#57C785; font-size:11px;'>Titanium+ Variant · Unlimited Restoration</p>
+        </div>""", unsafe_allow_html=True)
 
-    # Health Floater Details
-    st.markdown("<br><p style='font-size:14px; color:#C8A84B; font-weight:600;'>Existing Health Floaters</p>", unsafe_allow_html=True)
-    f1, f2 = st.columns(2)
-    with f1:
-        st.markdown("<div style='background:#0C1A2E; padding:15px; border-radius:12px; border:1px solid #1C3050;'> <p style='color:#7A9BBF; font-size:11px;'>Floater 1 (Couple)</p> <p style='font-size:16px; margin:0;'>Active · No Claims</p> <p style='color:#57C785; font-size:11px;'>Cumulative Bonus Accrued</p> </div>", unsafe_allow_html=True)
-    with f2:
-        st.markdown("<div style='background:#0C1A2E; padding:15px; border-radius:12px; border:1px solid #1C3050;'> <p style='color:#7A9BBF; font-size:11px;'>Floater 2 (Incl. Son)</p> <p style='font-size:16px; margin:0;'>Active · No Claims</p> <p style='color:#57C785; font-size:11px;'>Cumulative Bonus Accrued</p> </div>", unsafe_allow_html=True)
-
-    st.markdown("""
-    <div style='background:rgba(200,168,75,0.05); padding:20px; border-radius:15px; border:1px solid #C8A84B30; margin-top:20px;'>
-        <p style='color:#C8A84B; font-weight:600; font-size:13px;'>◈ Advisor Recommendation</p>
-        <p style='font-size:13px; color:#EAE3D6;'>Proposed <b>HDFC Ergo Optima Secure (50L Base)</b>. <br>
-        Estimated Annual Premium: <b>₹38,000 - ₹45,000</b> (incl. GST) based on age. <br>
-        Key Benefit: 4X Secure Benefit immediately triples the cover to 2 Cr if needed.</p>
+    # Upgrade Recommendation
+    st.markdown(f"""
+    <div style='background:rgba(200,168,75,0.05); padding:25px; border-radius:15px; border:2px solid #C8A84B; margin-top:20px;'>
+        <p style='color:#C8A84B; font-weight:700; font-size:14px;'>◈ ADVISOR PROPOSAL: HDFC ERGO OPTIMA SECURE</p>
+        <p style='font-size:13px; color:#EAE3D6; line-height:1.6;'>
+        <b>Recommended Base:</b> ₹30.0 Lakhs <br>
+        <b>Secure Benefit:</b> Covers doubles to <b>₹60 Lakhs</b> from Day 1 at no cost. <br>
+        <b>Total Shield:</b> Combined with Star & Niva, family protection hits <b>₹90 Lakhs</b> immediately. <br>
+        <b>Est. Premium:</b> ₹34,000 - ₹38,000 (Approx for Age 52-53).
+        </p>
     </div>
     """, unsafe_allow_html=True)
 
 # ── TAB 4: ACTIONS ────────────────────────────────────────────────────────────
 elif tab == "Actions":
-    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Strategic Action Items</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Strategic Actions</p>", unsafe_allow_html=True)
     actions = [
-        ("Upgrade Health Insurance", "Initiate HDFC Ergo Optima Secure (50L) for enhanced safety.", "Vikram Batra"),
-        ("Monthly Wealth Infusion", "Execute ₹7.0 L SIP on the 25th.", "Vikram Batra"),
-        ("Legacy Exit Plan", "Redeem Legacy (Exit) funds as per NAV targets into NiftyBees.", "Vikram Batra"),
-        ("Documentation", "Verify Floater 2 son's inclusion and bonus certificate.", "Vikram Batra")
+        ("Monthly SIP Execution", "₹7.0 L auto-debit scheduled for the 25th.", "Vikram Batra"),
+        ("Health Upgrade", "Initiate HDFC Ergo Optima Secure (30L) for 1Cr target.", "Vikram Batra"),
+        ("Legacy Portfolio Exit", "Liquidate legacy units into NiftyBees / Gold.", "Vikram Batra"),
+        ("Tax Planning", "Booking 1.25L LTCG before Financial Year end.", "Vikram Batra")
     ]
     for act, desc, owner in actions:
-        st.markdown(f"<div style='padding:20px; border-bottom:1px solid #1C3050;'> <div style='display:flex; justify-content:space-between;'><span style='color:#C8A84B; font-weight:600;'>{act}</span><span style='color:#7A9BBF; font-size:11px;'>{owner}</span></div> <p style='font-size:13px; color:#EAE3D6; margin-top:5px;'>{desc}</p> </div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='padding:20px; border-bottom:1px solid #1C3050;'><div style='display:flex; justify-content:space-between;'><span style='color:#C8A84B; font-weight:600;'>{act}</span><span style='color:#7A9BBF; font-size:11px;'>{owner}</span></div><p style='font-size:13px; color:#EAE3D6; margin-top:5px;'>{desc}</p></div>", unsafe_allow_html=True)
