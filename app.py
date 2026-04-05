@@ -37,10 +37,10 @@ div[role="radiogroup"] label:has(input:checked) {
     background: rgba(200,168,75,0.12) !important; border-color: #C8A84B !important; color: #C8A84B !important;
 }
 
-/* Custom Table Styling to remove internal scroll */
+/* Static Table Styling - Full Page (No Internal Scroll) */
 .static-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-.static-table th { background: #0C1A2E; color: #C8A84B; text-align: left; padding: 12px; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #1C3050; }
-.static-table td { padding: 12px; border-bottom: 1px solid #1C3050; font-size: 14px; color: #EAE3D6; }
+.static-table th { background: #0C1A2E; color: #C8A84B; text-align: left; padding: 15px; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #1C3050; }
+.static-table td { padding: 15px; border-bottom: 1px solid #1C3050; font-size: 14px; color: #EAE3D6; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -55,31 +55,29 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 @st.cache_data(ttl=60) 
 def fetch_data():
     df = conn.read(spreadsheet=URL)
-    # Clean the 'Current Value' column to ensure it is purely numeric
+    # CLEANING: Ensure Column E ('Current Value') is strictly numeric for math
     if 'Current Value' in df.columns:
-        df['Current Value'] = df['Current Value'].astype(str).replace('[₹,L,Cr, ]', '', regex=True)
-        df['Current Value'] = pd.to_numeric(df['Current Value'], errors='coerce').fillna(0)
+        df['Val_Num'] = pd.to_numeric(df['Current Value'].astype(str).replace('[₹,L,Cr, ,]', '', regex=True), errors='coerce').fillna(0)
     return df.dropna(subset=['Asset Name'])
 
 try:
     data_df = fetch_data()
-    # Filter out rows that are zero or headers to get the TRUE total
-    active_assets = data_df[data_df['Current Value'] > 0]
-    total_nw = active_assets['Current Value'].sum()
+    # CORE FIX: Summing every numeric value in the 'Val_Num' column
+    total_nw = data_df['Val_Num'].sum()
     
-    # Categorization Logic
-    mf_total = active_assets[active_assets['Category'].str.contains('Aggressive|Stable|Legacy', na=False)]['Current Value'].sum()
-    etf_total = active_assets[active_assets['Category'].str.contains('New Core|New Global|New Stability', na=False)]['Current Value'].sum()
-    gold_total = active_assets[active_assets['Category'].str.contains('Commodities', na=False)]['Current Value'].sum()
-    fd_total = active_assets[active_assets['Category'].str.contains('Fixed Income', na=False)]['Current Value'].sum()
-    cash_total = active_assets[active_assets['Category'].str.contains('Liquid', na=False)]['Current Value'].sum()
+    # Category Math for the Overview Chart
+    mf_val = data_df[data_df['Category'].str.contains('Aggressive|Stable|Legacy', na=False)]['Val_Num'].sum()
+    etf_val = data_df[data_df['Category'].str.contains('New Core|New Global|New Stability', na=False)]['Val_Num'].sum()
+    gold_val = data_df[data_df['Category'].str.contains('Commodities', na=False)]['Val_Num'].sum()
+    fd_val = data_df[data_df['Category'].str.contains('Fixed Income', na=False)]['Val_Num'].sum()
+    cash_val = data_df[data_df['Category'].str.contains('Liquid', na=False)]['Val_Num'].sum()
 
     OVERVIEW_MAP = {
-        "Mutual Funds": mf_total,
-        "ETFs & New Equity": etf_total,
-        "Physical Gold": gold_total,
-        "Fixed Deposits": fd_total,
-        "Cash Buffer": cash_total
+        "Mutual Funds": mf_val,
+        "ETFs & New Assets": etf_val,
+        "Physical Gold": gold_val,
+        "Fixed Deposits": fd_val,
+        "Cash Buffer": cash_val
     }
 except:
     st.stop()
@@ -99,7 +97,7 @@ if not st.session_state.logged_in:
     st.stop()
 
 # ── MAIN UI ──────────────────────────────────────────────────────────────────
-st.markdown(f"<div style='font-size:22px; font-weight:500;'>Chandra Mohan Narang</div><p style='font-size:11px; color:#7A9BBF; margin-top:-15px;'>FAMILY OFFICE DASHBOARD</p>", unsafe_allow_html=True)
+st.markdown(f"<div style='font-size:22px; font-weight:500;'>Chandra Mohan Narang</div><p style='font-size:11px; color:#7A9BBF; margin-top:-15px;'>CONSOLIDATED FAMILY WEALTH DASHBOARD</p>", unsafe_allow_html=True)
 tab = st.radio("nav", ["Overview", "Portfolio", "Protection", "Actions"], horizontal=True, label_visibility="collapsed")
 
 # ── TAB 1: OVERVIEW ───────────────────────────────────────────────────────────
@@ -123,48 +121,40 @@ if tab == "Overview":
             if val > 0:
                 st.markdown(f"<div style='display:flex; justify-content:space-between; margin-bottom:18px; border-bottom:1px solid #1C3050; padding-bottom:6px;'><span>{label}</span><span style='font-family:\"DM Mono\";'>{fmt_l(val)}</span></div>", unsafe_allow_html=True)
 
-# ── TAB 2: PORTFOLIO ──────────────────────────────────────────────────────────
+# ── TAB 2: PORTFOLIO (STATIC TABLE - FULL PAGE) ───────────────────────────────
 elif tab == "Portfolio":
-    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Detailed Holding Inventory</p>", unsafe_allow_html=True)
-    disp = active_assets[['Asset Name', 'Category', 'Units / Qty', 'Current Value']].copy()
-    disp['Allocation %'] = (disp['Current Value'] / total_nw * 100).round(1).astype(str) + '%'
-    disp['Current Value'] = disp['Current Value'].apply(fmt_l)
+    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; margin-bottom:20px;'>Detailed Holding Inventory</p>", unsafe_allow_html=True)
+    disp = data_df[['Asset Name', 'Category', 'Units / Qty', 'Current Value', 'Val_Num']].copy()
+    disp['Allocation %'] = (disp['Val_Num'] / total_nw * 100).round(1).astype(str) + '%'
     
-    # Render as a static HTML table to avoid internal scrollbars
-    html = "<table class='static-table'><thead><tr>"
-    for col in disp.columns: html += f"<th>{col}</th>"
-    html += "</tr></thead><tbody>"
+    # Render static HTML table to remove internal scrollbars
+    html = "<table class='static-table'><thead><tr><th>Asset Name</th><th>Category</th><th>Units / Qty</th><th>Value</th><th>Alloc %</th></tr></thead><tbody>"
     for _, row in disp.iterrows():
-        html += "<tr>" + "".join([f"<td>{val}</td>" for val in row]) + "</tr>"
+        html += f"<tr><td>{row['Asset Name']}</td><td>{row['Category']}</td><td>{row['Units / Qty']}</td><td>{fmt_l(row['Val_Num'])}</td><td>{row['Allocation %']}</td></tr>"
     html += "</tbody></table>"
     st.markdown(html, unsafe_allow_html=True)
 
-# ── TAB 3: PROTECTION (RESTORED) ──────────────────────────────────────────────
+# ── TAB 3: PROTECTION (RESTORED TO ORIGINAL DRAFT) ────────────────────────────
 elif tab == "Protection":
     st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Insurance & Safety Net</p>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
     with c1:
-        st.metric("Term Life Cover", "₹5.00 Cr", "Active")
+        st.markdown("<div style='background:#0C1A2E; padding:25px; border-radius:15px; border:1px solid #1C3050;'> <p style='color:#7A9BBF; font-size:12px;'>Term Life Cover</p> <h2 style='margin:0;'>₹5.0 Cr</h2> <p style='color:#C8A84B; font-size:11px;'>HDFC Life · Active</p> </div>", unsafe_allow_html=True)
     with c2:
-        st.metric("Health (Family Floater)", "₹25.0 L", "Active")
+        st.markdown("<div style='background:#0C1A2E; padding:25px; border-radius:15px; border:1px solid #1C3050;'> <p style='color:#7A9BBF; font-size:12px;'>Health Floater</p> <h2 style='margin:0;'>₹25.0 L</h2> <p style='color:#C8A84B; font-size:11px;'>Niva Bupa · Active</p> </div>", unsafe_allow_html=True)
     with c3:
-        st.metric("Critical Illness", "₹50.0 L", "Active")
+        st.markdown("<div style='background:#0C1A2E; padding:25px; border-radius:15px; border:1px solid #1C3050;'> <p style='color:#7A9BBF; font-size:12px;'>Critical Illness</p> <h2 style='margin:0;'>₹50.0 L</h2> <p style='color:#C8A84B; font-size:11px;'>ICICI Lombard · Active</p> </div>", unsafe_allow_html=True)
     
-    st.markdown("""
-    <div style='background:#0C1A2E; padding:20px; border-radius:15px; margin-top:20px; border:1px solid #1C3050;'>
-        <p style='color:#C8A84B; font-weight:600;'>Primary Nominee Status</p>
-        <p style='font-size:14px; color:#7A9BBF;'>All policies updated with Shubha Jain (Wife) as 100% Nominee.</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown("<br><div style='background:rgba(82,162,255,0.05); padding:20px; border-radius:15px; border:1px solid #52A2FF30;'> <p style='color:#52A2FF; font-weight:600;'>◈ Nominee Verification</p> <p style='font-size:14px; color:#EAE3D6;'>All policies and investment folios are verified with <b>Shubha Jain</b> as 100% Nominee.</p> </div>", unsafe_allow_html=True)
 
-# ── TAB 4: ACTIONS (RESTORED) ─────────────────────────────────────────────────
+# ── TAB 4: ACTIONS (RESTORED TO ORIGINAL DRAFT) ───────────────────────────────
 elif tab == "Actions":
-    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Pending Tasks (Vikram Batra)</p>", unsafe_allow_html=True)
-    tasks = [
-        ("Monthly SIP Execution", "Scheduled for 25th"),
-        ("Quarterly Rebalancing", "Pending June 2026"),
-        ("Annual Tax Filing", "In Progress"),
-        ("Physical Gold Audit", "Completed Mar 2026")
+    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Strategic Action Items</p>", unsafe_allow_html=True)
+    actions = [
+        ("Monthly SIP Execution", "₹7.0 L auto-debit scheduled for the 25th.", "Vikram Batra"),
+        ("Legacy Fund Exit", "Phased redemption of 'Legacy (Exit)' funds into NiftyBees.", "Vikram Batra"),
+        ("Quarterly Rebalancing", "Review asset weightage vs target allocation in July.", "CM Narang"),
+        ("Tax Harvesting", "Booking ₹1.25L LTCG for tax efficiency before FY end.", "Vikram Batra")
     ]
-    for t, status in tasks:
-        st.markdown(f"<div style='display:flex; justify-content:space-between; padding:15px; border-bottom:1px solid #1C3050;'><span>{t}</span><span style='color:#C8A84B;'>{status}</span></div>", unsafe_allow_html=True)
+    for act, desc, owner in actions:
+        st.markdown(f"<div style='padding:20px; border-bottom:1px solid #1C3050;'> <div style='display:flex; justify-content:space-between;'><span style='color:#C8A84B; font-weight:600;'>{act}</span><span style='color:#7A9BBF; font-size:11px;'>{owner}</span></div> <p style='font-size:13px; color:#EAE3D6; margin-top:5px;'>{desc}</p> </div>", unsafe_allow_html=True)
