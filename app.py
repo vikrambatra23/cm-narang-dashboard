@@ -194,7 +194,7 @@ elif tab == "Portfolio":
 # ── TAB: PROTECTION ─────────────────────────────────────────────────────────
 elif tab == "Protection":
     st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Term Life Protection</p>", unsafe_allow_html=True)
-    st.markdown("<div style='background:#0C1A2E; padding:25px; border-radius:15px; border:1px solid #1C3050;'><p style='color:#7A9BBF; font-size:12px;'>Sum Insured</p><h2 style='margin:0;'>₹1.00 Crore</h2><p style='color:#C8A84B; font-size:11px;'>Primary Policy · Active · Nominee: Shubha Jain</p></div>", unsafe_allow_html=True)
+    st.markdown("<div style='background:#0C1A2E; padding:25px; border-radius:15px; border:1px solid #1C3050;'><p style='color:#7A9BBF; font-size:12px;'>Sum Insured</p><h2 style='margin:0;'>₹1.00 Crore</h2><p style='color:#C8A84B; font-size:11px;'>Primary Policy · Active · Nominee: Ritu Narang</p></div>", unsafe_allow_html=True)
     
     st.markdown("<br><p style='font-size:20px; color:#C8A84B; font-weight:500;'>Family Health Shield</p>", unsafe_allow_html=True)
     h1, h2 = st.columns(2)
