@@ -75,7 +75,8 @@ def fmt_l(n):  return f"₹{n/1e5:.1f} L"
 URL = "https://docs.google.com/spreadsheets/d/1PZACfddE3VkcCWqYD-_0j_ERaBUT1SBQqPN63Vylvy0/export?format=csv"
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-@st.cache_data(ttl=60) 
+# Set to 3600 (1 hour) for market stability tomorrow
+@st.cache_data(ttl=3600) 
 def fetch_data():
     df = conn.read(spreadsheet=URL)
     if 'Current Value' in df.columns:
@@ -159,7 +160,7 @@ if tab == "Overview":
     fig_gauge.update_layout(height=300, paper_bgcolor='rgba(0,0,0,0)', margin=dict(t=50, b=20, l=20, r=20))
     st.plotly_chart(fig_gauge, use_container_width=True)
 
-    # Double-line separation for clutter control
+    # Double-line separation for visual breathing room
     st.markdown("""
         <div style="margin: 10px 0 30px 0;">
             <hr style="border: 0; border-top: 1px solid #1C3050; margin-bottom: 3px;">
@@ -181,7 +182,7 @@ if tab == "Overview":
 # ── TAB: PORTFOLIO ──────────────────────────────────────────────────────────
 elif tab == "Portfolio":
     st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Detailed Holding Inventory</p>", unsafe_allow_html=True)
-    # Sort assets by Value (High to Low)
+    # Sort assets by Value (High to Low) for analytical order
     disp = assets_df[['Asset Name', 'Category', 'Units / Qty', 'Current Value', 'Val_Num']].copy()
     disp = disp.sort_values(by='Val_Num', ascending=False) 
     disp['Alloc %'] = (disp['Val_Num'] / total_nw * 100).round(1).astype(str) + '%'
