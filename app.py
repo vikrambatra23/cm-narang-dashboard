@@ -64,7 +64,6 @@ try:
     assets_df = fetch_data()
     total_nw = assets_df['Val_Num'].sum()
     
-    # Categorization for Overview Chart
     mf_v = assets_df[assets_df['Category'].str.contains('Aggressive|Stable|Legacy', na=False)]['Val_Num'].sum()
     etf_v = assets_df[assets_df['Category'].str.contains('New Core|New Global|New Stability', na=False)]['Val_Num'].sum()
     gold_v = assets_df[assets_df['Category'].str.contains('Commodities', na=False)]['Val_Num'].sum()
@@ -75,7 +74,7 @@ try:
 except:
     st.stop()
 
-# ── LOGIN SYSTEM (RESTORED TO ORIGINAL) ───────────────────────────────────────
+# ── LOGIN SYSTEM ──────────────────────────────────────────────────────────────
 if "logged_in" not in st.session_state: st.session_state.logged_in = False
 if not st.session_state.logged_in:
     _, col, _ = st.columns([1, 1.2, 1])
@@ -91,7 +90,7 @@ if not st.session_state.logged_in:
                 st.error("Invalid Credentials")
     st.stop()
 
-# ── HEADER SECTION (FIXED NO OVERLAP) ─────────────────────────────────────────
+# ── HEADER SECTION ────────────────────────────────────────────────────────────
 col_h1, col_h2 = st.columns([2, 1])
 with col_h1:
     st.markdown("<h1 style='background: linear-gradient(90deg, #C8A84B, #E2CC8A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; font-size: 38px; margin-bottom: 0px;'>Chandra Mohan Narang</h1><p style='color: #7A9BBF; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin-top: -5px;'>Family Office Dashboard</p>", unsafe_allow_html=True)
@@ -101,7 +100,7 @@ with col_h2:
 st.markdown("<hr style='margin: 5px 0 15px 0; border: 1px solid #1C3050;'>", unsafe_allow_html=True)
 tab = st.radio("nav", ["Overview", "Portfolio", "Protection", "Actions"], horizontal=True, label_visibility="collapsed")
 
-# ── TAB 1: OVERVIEW ───────────────────────────────────────────────────────────
+# ── TABS ──────────────────────────────────────────────────────────────────────
 if tab == "Overview":
     st.markdown(f"<div style='background:#0C1A2E; border:1px solid #1C3050; border-radius:24px; padding:50px; text-align:center; margin-bottom:30px;'><p style='font-size:12px; color:#7A9BBF; text-transform:uppercase; letter-spacing:3px;'>Consolidated Net Worth</p><h1 class='gold-text'>{fmt_cr(total_nw)}</h1></div>", unsafe_allow_html=True)
     c1, c2 = st.columns([1, 1])
@@ -114,7 +113,6 @@ if tab == "Overview":
         for label, val in OVERVIEW_MAP.items():
             if val > 0: st.markdown(f"<div style='display:flex; justify-content:space-between; margin-bottom:18px; border-bottom:1px solid #1C3050; padding-bottom:6px;'><span>{label}</span><span style='font-family:\"JetBrains Mono\";'>{fmt_l(val)}</span></div>", unsafe_allow_html=True)
 
-# ── TAB 2: PORTFOLIO ──────────────────────────────────────────────────────────
 elif tab == "Portfolio":
     st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Detailed Holding Inventory</p>", unsafe_allow_html=True)
     disp = assets_df[['Asset Name', 'Category', 'Units / Qty', 'Current Value', 'Val_Num']].copy()
@@ -124,12 +122,17 @@ elif tab == "Portfolio":
         html += f"<tr><td>{r['Asset Name']}</td><td>{r['Category']}</td><td>{r['Units / Qty']}</td><td>{fmt_l(r['Val_Num'])}</td><td>{r['Alloc %']}</td></tr>"
     st.markdown(html + "</tbody></table>", unsafe_allow_html=True)
 
-# ── TAB 3: PROTECTION ─────────────────────────────────────────────────────────
 elif tab == "Protection":
     st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Term Life Protection</p>", unsafe_allow_html=True)
     st.markdown("<div style='background:#0C1A2E; padding:25px; border-radius:15px; border:1px solid #1C3050;'><p style='color:#7A9BBF; font-size:12px;'>Sum Insured</p><h2 style='margin:0;'>₹1.00 Crore</h2><p style='color:#C8A84B; font-size:11px;'>Primary Policy · Active · Nominee: Shubha Jain</p></div>", unsafe_allow_html=True)
-    
     st.markdown("<br><p style='font-size:20px; color:#C8A84B; font-weight:500;'>Family Health Shield</p>", unsafe_allow_html=True)
     h1, h2 = st.columns(2)
     with h1: st.markdown("<div style='background:#0C1A2E; padding:20px; border-radius:12px; border:1px solid #1C3050;'><p style='color:#7A9BBF; font-size:11px;'>Star Comprehensive (Family)</p><p style='font-size:18px; margin:0;'>₹20.0 L</p><p style='color:#57C785; font-size:10px;'>Incl. 10L Loyalty Bonus · Covers Son</p></div>", unsafe_allow_html=True)
-    with h2: st.markdown("<div style='background:#0C1A2E; padding:20px; border-radius:12px; border:1px solid #1C3050;'><p style='color:#7A9BBF; font-size:11px;'>Niva Bupa ReAssure 2.0 (Couple)</p><p style='font-size:18px; margin:0;'>₹10.0 L</p><p style='color:#57C785; font-size:10px;'>Titanium+ Variant · No Claim Bonus</p></div>", unsafe_allow_html=
+    with h2: st.markdown("<div style='background:#0C1A2E; padding:20px; border-radius:12px; border:1px solid #1C3050;'><p style='color:#7A9BBF; font-size:11px;'>Niva Bupa ReAssure 2.0 (Couple)</p><p style='font-size:18px; margin:0;'>₹10.0 L</p><p style='color:#57C785; font-size:10px;'>Titanium+ Variant · No Claim Bonus</p></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='background:rgba(200,168,75,0.05); padding:25px; border-radius:15px; border:2px solid #C8A84B; margin-top:20px;'><p style='color:#C8A84B; font-weight:700; font-size:14px;'>◈ PROPOSED: HDFC ERGO OPTIMA SECURE (30L BASE)</p><p style='font-size:13px; color:#EAE3D6; line-height:1.6;'><b>Benefit:</b> Doubles to <b>60L</b> on Day 1.<br><b>Total Protection:</b> Immediate <b>90L</b> shield, growing to 1.20Cr+ via Plus Benefit.</p></div>", unsafe_allow_html=True)
+
+elif tab == "Actions":
+    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Strategic Actions</p>", unsafe_allow_html=True)
+    actions = [("Monthly Wealth Infusion", "₹7.0 L SIP on the 25th.", "Vikram Batra"), ("Health Upgrade", "Initiate HDFC Ergo Optima Secure 30L.", "Vikram Batra"), ("Legacy Portfolio Exit", "Phased liquidation into NiftyBees / Gold.", "Vikram Batra")]
+    for act, desc, owner in actions:
+        st.markdown(f"<div style='padding:20px; border-bottom:1px solid #1C3050;'><div style='display:flex; justify-content:space-between;'><span style='color:#C8A84B; font-weight:600;'>{act}</span><span style='color:#7A9BBF; font-size:11px;'>{owner}</span></div><p style='font-size:13px; color:#EAE3D6; margin-top:5px;'>{desc}</p></div>", unsafe_allow_html=True)
