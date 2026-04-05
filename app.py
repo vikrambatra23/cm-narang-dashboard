@@ -103,7 +103,7 @@ if tab == "Overview":
     # 10Cr SPEEDOMETER GAUGE
     fig_gauge = go.Figure(go.Indicator(
         mode = "gauge+number",
-        value = total_nw / 10000000, # Show value in Crores
+        value = total_nw / 10000000, 
         number = {'suffix': " Cr", 'font': {'color': '#E2CC8A', 'size': 50}},
         title = {'text': "GOAL PROGRESS: 10 CR JOURNEY", 'font': {'size': 12, 'color': '#7A9BBF'}},
         gauge = {
@@ -119,6 +119,14 @@ if tab == "Overview":
     fig_gauge.update_layout(height=300, paper_bgcolor='rgba(0,0,0,0)', margin=dict(t=50, b=20, l=20, r=20))
     st.plotly_chart(fig_gauge, use_container_width=True)
 
+    # ── DOUBLE LINE SEPARATION ──
+    st.markdown("""
+        <div style="margin: 10px 0 30px 0;">
+            <hr style="border: 0; border-top: 1px solid #1C3050; margin-bottom: 3px;">
+            <hr style="border: 0; border-top: 1px solid #1C3050;">
+        </div>
+    """, unsafe_allow_html=True)
+
     c1, c2 = st.columns([1, 1])
     with c1:
         fig = go.Figure(go.Pie(labels=list(OVERVIEW_MAP.keys()), values=list(OVERVIEW_MAP.values()), hole=0.7, marker=dict(colors=['#52A2FF','#57C785','#E2CC8A','#46C1C1','#A37CFF'])))
@@ -131,10 +139,8 @@ if tab == "Overview":
 
 elif tab == "Portfolio":
     st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Detailed Holding Inventory</p>", unsafe_allow_html=True)
-    
-    # Logic to sort by Allocation %
     disp = assets_df[['Asset Name', 'Category', 'Units / Qty', 'Current Value', 'Val_Num']].copy()
-    disp = disp.sort_values(by='Val_Num', ascending=False) # Sort by largest value first
+    disp = disp.sort_values(by='Val_Num', ascending=False) 
     disp['Alloc %'] = (disp['Val_Num'] / total_nw * 100).round(1).astype(str) + '%'
     
     html = "<table class='static-table'><thead><tr><th>Asset Name</th><th>Category</th><th>Qty</th><th>Value</th><th>Alloc %</th></tr></thead><tbody>"
