@@ -1,166 +1,114 @@
 import streamlit as st
 import plotly.graph_objects as go
+import plotly.express as px
 import pandas as pd
 from streamlit_gsheets import GSheetsConnection
 
 # ── PAGE CONFIG ───────────────────────────────────────────────────────────────
-st.set_page_config(
-    page_title="Wealth Dashboard · CM Narang",
-    page_icon="◈",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
+st.set_page_config(page_title="Wealth Terminal · CM Narang", page_icon="◈", layout="wide")
 
-# ── ROYAL UI STYLING ──────────────────────────────────────────────────────────
+# ── DARK ANALYTICAL STYLING ───────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
-html, body, [class*="css"] { font-family: 'Inter', sans-serif; background-color: #07101F; }
-#MainMenu, footer, header { visibility: hidden; }
-.stDeployButton { display: none; }
-.block-container { padding: 1.5rem 2rem 4rem 2rem; max-width: 1100px; }
-.stApp { background-color: #07101F !important; }
-p, div, span, label { color: #EAE3D6; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono&display=swap');
+    html, body, [class*="css"] { font-family: 'Inter', sans-serif; background-color: #050A14; }
+    .stApp { background-color: #050A14 !important; }
+    #MainMenu, footer, header { visibility: hidden; }
+    
+    /* Metrics Styling */
+    [data-testid="stMetricValue"] { font-family: 'JetBrains Mono'; color: #E2CC8A !important; font-size: 28px !important; }
+    [data-testid="stMetricLabel"] { color: #7A9BBF !important; text-transform: uppercase; letter-spacing: 1px; font-size: 10px !important; }
 
-.gold-text {
-    background: linear-gradient(to bottom, #C8A84B 0%, #E2CC8A 50%, #B38F36 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 700; font-size: 72px !important; letter-spacing: -2px; line-height: 1.1;
-}
-
-div[role="radiogroup"] label {
-    background: #0C1A2E !important; border: 1px solid #1C3050 !important;
-    border-radius: 12px !important; padding: 10px 24px !important; color: #5C7089 !important;
-}
-div[role="radiogroup"] label:has(input:checked) {
-    background: rgba(200,168,75,0.12) !important; border-color: #C8A84B !important; color: #C8A84B !important;
-}
-
-.static-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-.static-table th { background: #0C1A2E; color: #C8A84B; text-align: left; padding: 15px; font-size: 12px; text-transform: uppercase; border-bottom: 2px solid #1C3050; }
-.static-table td { padding: 15px; border-bottom: 1px solid #1C3050; font-size: 14px; color: #EAE3D6; }
+    .gold-header {
+        background: linear-gradient(90deg, #C8A84B, #E2CC8A);
+        -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        font-weight: 700; font-size: 48px; letter-spacing: -1px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# ── HELPERS ──────────────────────────────────────────────────────────────────
-def fmt_cr(n): return f"₹{n/1e7:.2f} Cr"
-def fmt_l(n):  return f"₹{n/1e5:.1f} L"
-
-# ── LIVE DATA CONNECTION ─────────────────────────────────────────────────────
+# ── DATA ENGINE ───────────────────────────────────────────────────────────────
 URL = "https://docs.google.com/spreadsheets/d/1PZACfddE3VkcCWqYD-_0j_ERaBUT1SBQqPN63Vylvy0/export?format=csv"
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-@st.cache_data(ttl=60) 
-def fetch_data():
+@st.cache_data(ttl=60)
+def get_data():
+    # Load Portfolio
     df = conn.read(spreadsheet=URL)
-    if 'Current Value' in df.columns:
-        df['Val_Num'] = pd.to_numeric(df['Current Value'].astype(str).replace('[₹,L,Cr, ,]', '', regex=True), errors='coerce').fillna(0)
-    return df.dropna(subset=['Asset Name'])
-
-try:
-    data_df = fetch_data()
-    # Anti-Double Counting: Ignore rows with "Total" or empty names
-    active_assets = data_df[~data_df['Asset Name'].str.contains('Total|TOTAL|Sum|Subtotal', na=False)]
-    active_assets = active_assets[active_assets['Val_Num'] > 10] # Ignore dust values
-    total_nw = active_assets['Val_Num'].sum()
+    df['Val_Num'] = pd.to_numeric(df['Current Value'].astype(str).replace('[₹,L,Cr, ,]', '', regex=True), errors='coerce').fillna(0)
+    assets = df[~df['Asset Name'].str.contains('Total|TOTAL|Sum', na=False)]
+    assets = assets[assets['Val_Num'] > 0]
     
-    # Categorization
-    mf_v = active_assets[active_assets['Category'].str.contains('Aggressive|Stable|Legacy', na=False)]['Val_Num'].sum()
-    etf_v = active_assets[active_assets['Category'].str.contains('New Core|New Global|New Stability', na=False)]['Val_Num'].sum()
-    gold_v = active_assets[active_assets['Category'].str.contains('Commodities', na=False)]['Val_Num'].sum()
-    fd_v = active_assets[active_assets['Category'].str.contains('Fixed Income', na=False)]['Val_Num'].sum()
-    cash_v = active_assets[active_assets['Category'].str.contains('Liquid', na=False)]['Val_Num'].sum()
+    # Load History (Assumes a tab named 'History' exists)
+    try:
+        hist = conn.read(spreadsheet=URL, worksheet="History")
+        hist['Date'] = pd.to_datetime(hist['Date'])
+        hist['Net Worth'] = pd.to_numeric(hist['Net Worth'])
+    except:
+        hist = pd.DataFrame(columns=['Date', 'Net Worth'])
+        
+    return assets, hist
 
-    OVERVIEW_MAP = {"Mutual Funds": mf_v, "ETFs": etf_v, "Gold": gold_v, "Fixed Income": fd_v, "Cash": cash_v}
-except:
-    st.stop()
+assets, history = get_data()
+total_nw = assets['Val_Num'].sum()
+target = 100000000 # 10 Cr Goal
 
-# ── LOGIN ─────────────────────────────────────────────────────────────────────
-if "logged_in" not in st.session_state: st.session_state.logged_in = False
-if not st.session_state.logged_in:
-    _, col, _ = st.columns([1, 1.2, 1])
-    with col:
-        st.markdown("<div style='text-align:center; padding:60px 0;'><h2 style='color:#C8A84B;'>◈ PRIVATE WEALTH</h2><p style='color:#7A9BBF;'>CHANDRA MOHAN NARANG</p></div>", unsafe_allow_html=True)
-        u, p = st.text_input("Username"), st.text_input("Password", type="password")
-        if st.button("Sign In", use_container_width=True):
-            if u == "cm.narang" and p == "Narang@2026":
-                st.session_state.logged_in = True
-                st.rerun()
-    st.stop()
+# ── HEADER & NAVIGATION ───────────────────────────────────────────────────────
+col_h1, col_h2 = st.columns([2, 1])
+with col_h1:
+    st.markdown("<h1 class='gold-header'>Wealth Terminal</h1>", unsafe_allow_html=True)
+    st.markdown(f"<p style='color:#5C7089; margin-top:-20px;'>CHANDRA MOHAN NARANG • {pd.Timestamp.now().strftime('%d %b %Y')}</p>", unsafe_allow_html=True)
 
-# ── MAIN UI ──────────────────────────────────────────────────────────────────
-st.markdown(f"<div style='font-size:22px; font-weight:500;'>Chandra Mohan Narang</div><p style='font-size:11px; color:#7A9BBF; margin-top:-15px;'>FAMILY OFFICE DASHBOARD</p>", unsafe_allow_html=True)
-tab = st.radio("nav", ["Overview", "Portfolio", "Protection", "Actions"], horizontal=True, label_visibility="collapsed")
+tab = st.radio("nav", ["Strategic Overview", "Analytics", "Protection", "Actions"], horizontal=True, label_visibility="collapsed")
+st.markdown("---")
 
-# ── TAB 1: OVERVIEW ───────────────────────────────────────────────────────────
-if tab == "Overview":
-    st.markdown(f"<div style='background:#0C1A2E; border:1px solid #1C3050; border-radius:24px; padding:50px; text-align:center; margin-bottom:30px;'><p style='font-size:12px; color:#7A9BBF; text-transform:uppercase; letter-spacing:3px;'>Consolidated Net Worth</p><h1 class='gold-text'>{fmt_cr(total_nw)}</h1></div>", unsafe_allow_html=True)
-    c1, c2 = st.columns([1, 1])
+# ── TAB 1: STRATEGIC OVERVIEW ─────────────────────────────────────────────────
+if tab == "Strategic Overview":
+    # Row 1: The 10Cr Goal Gauge
+    st.markdown("<p style='color:#C8A84B; font-weight:600; letter-spacing:1px;'>GOAL PROGRESS: 10 CR JOURNEY</p>", unsafe_allow_html=True)
+    
+    fig_gauge = go.Figure(go.Indicator(
+        mode = "gauge+number",
+        value = total_nw / 10000000, # Show in Cr
+        domain = {'x': [0, 1], 'y': [0, 1]},
+        title = {'text': "Current (Cr)", 'font': {'size': 14, 'color': '#7A9BBF'}},
+        gauge = {
+            'axis': {'range': [None, 10], 'tickwidth': 1, 'tickcolor': "#1C3050"},
+            'bar': {'color': "#C8A84B"},
+            'bgcolor': "#0C1A2E",
+            'borderwidth': 2,
+            'bordercolor': "#1C3050",
+            'steps': [{'range': [0, 10], 'color': '#0C1A2E'}],
+            'threshold': {'line': {'color': "white", 'width': 4}, 'thickness': 0.75, 'value': 10}
+        }
+    ))
+    fig_gauge.update_layout(paper_bgcolor='rgba(0,0,0,0)', height=250, margin=dict(t=30, b=0, l=10, r=10))
+    st.plotly_chart(fig_gauge, use_container_width=True)
+
+    # Row 2: Analytical Pie & Progress Path
+    c1, c2 = st.columns([1, 1.5])
+    
     with c1:
-        fig = go.Figure(go.Pie(labels=list(OVERVIEW_MAP.keys()), values=list(OVERVIEW_MAP.values()), hole=0.7, marker=dict(colors=['#52A2FF','#57C785','#E2CC8A','#46C1C1','#A37CFF'])))
-        fig.update_layout(showlegend=False, height=350, paper_bgcolor='rgba(0,0,0,0)', margin=dict(t=0,b=0,l=0,r=0))
-        st.plotly_chart(fig, use_container_width=True)
+        st.markdown("<p style='font-size:11px; color:#7A9BBF;'>ASSET ALLOCATION</p>", unsafe_allow_html=True)
+        # Improved Pie Chart
+        fig_pie = px.pie(assets, values='Val_Num', names='Category', hole=0.7,
+                         color_discrete_sequence=px.colors.sequential.Gold_r)
+        fig_pie.update_layout(showlegend=True, paper_bgcolor='rgba(0,0,0,0)', 
+                              legend=dict(font=dict(color="#7A9BBF", size=10), orientation="h", y=-0.2),
+                              margin=dict(t=0, b=0, l=0, r=0))
+        fig_pie.update_traces(textinfo='percent', textfont_size=10, marker=dict(line=dict(color='#050A14', width=2)))
+        st.plotly_chart(fig_pie, use_container_width=True)
+
     with c2:
-        st.markdown("<p style='font-size:12px; color:#C8A84B; font-weight:600; letter-spacing:1px; margin-bottom:20px;'>ALLOCATION SUMMARY</p>", unsafe_allow_html=True)
-        for l, v in OVERVIEW_MAP.items():
-            if v > 0: st.markdown(f"<div style='display:flex; justify-content:space-between; margin-bottom:18px; border-bottom:1px solid #1C3050; padding-bottom:6px;'><span>{l}</span><span style='font-family:\"DM Mono\";'>{fmt_l(v)}</span></div>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size:11px; color:#7A9BBF;'>NET WORTH TRAJECTORY</p>", unsafe_allow_html=True)
+        if not history.empty:
+            fig_trend = px.line(history, x="Date", y="Net Worth", markers=True)
+            fig_trend.update_traces(line_color='#C8A84B', fill='tozeroy', fillcolor='rgba(200,168,75,0.05)')
+            fig_trend.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', 
+                                    height=300, margin=dict(t=10, b=0, l=0, r=0),
+                                    xaxis=dict(showgrid=False, color="#5C7089"), yaxis=dict(showgrid=True, gridcolor="#1C3050", color="#5C7089"))
+            st.plotly_chart(fig_trend, use_container_width=True)
+        else:
+            st.info("To see the trend, add a 'History' tab in your Google Sheet with 'Date' and 'Net Worth' columns.")
 
-# ── TAB 2: PORTFOLIO ──────────────────────────────────────────────────────────
-elif tab == "Portfolio":
-    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Detailed Holding Inventory</p>", unsafe_allow_html=True)
-    disp = active_assets[['Asset Name', 'Category', 'Units / Qty', 'Current Value', 'Val_Num']].copy()
-    disp['Alloc %'] = (disp['Val_Num'] / total_nw * 100).round(1).astype(str) + '%'
-    html = "<table class='static-table'><thead><tr><th>Asset Name</th><th>Category</th><th>Units / Qty</th><th>Value</th><th>Alloc %</th></tr></thead><tbody>"
-    for _, r in disp.iterrows():
-        html += f"<tr><td>{r['Asset Name']}</td><td>{r['Category']}</td><td>{r['Units / Qty']}</td><td>{fmt_l(r['Val_Num'])}</td><td>{r['Alloc %']}</td></tr>"
-    st.markdown(html + "</tbody></table>", unsafe_allow_html=True)
-
-# ── TAB 3: PROTECTION (UPDATED WITH POLICY DOC DETAILS) ───────────────────────
-elif tab == "Protection":
-    # --- TERM LIFE SECTION ---
-    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Term Life Protection</p>", unsafe_allow_html=True)
-    st.markdown("<div style='background:#0C1A2E; padding:25px; border-radius:15px; border:1px solid #1C3050;'> <p style='color:#7A9BBF; font-size:12px;'>Sum Insured</p> <h2 style='margin:0;'>₹1.00 Crore</h2> <p style='color:#C8A84B; font-size:11px;'>Primary Policy · Active Nominee: Shubha Jain</p> </div>", unsafe_allow_html=True)
-    
-    # --- HEALTH INSURANCE SECTION ---
-    st.markdown("<br><p style='font-size:20px; color:#C8A84B; font-weight:500;'>Family Health Shield</p>", unsafe_allow_html=True)
-    h1, h2 = st.columns(2)
-    with h1:
-        st.markdown("""
-        <div style='background:#0C1A2E; padding:20px; border-radius:12px; border:1px solid #1C3050;'>
-            <p style='color:#7A9BBF; font-size:11px;'>Star Comprehensive (Family)</p>
-            <p style='font-size:18px; margin:0;'>₹20.0 Lakhs</p>
-            <p style='color:#57C785; font-size:11px;'>Incl. 10L Loyalty Bonus · Covers Son</p>
-        </div>""", unsafe_allow_html=True)
-    with h2:
-        st.markdown("""
-        <div style='background:#0C1A2E; padding:20px; border-radius:12px; border:1px solid #1C3050;'>
-            <p style='color:#7A9BBF; font-size:11px;'>Niva Bupa ReAssure 2.0 (Couple)</p>
-            <p style='font-size:18px; margin:0;'>₹10.0 Lakhs</p>
-            <p style='color:#57C785; font-size:11px;'>Titanium+ Variant · Unlimited Restoration</p>
-        </div>""", unsafe_allow_html=True)
-
-    # Upgrade Recommendation
-    st.markdown(f"""
-    <div style='background:rgba(200,168,75,0.05); padding:25px; border-radius:15px; border:2px solid #C8A84B; margin-top:20px;'>
-        <p style='color:#C8A84B; font-weight:700; font-size:14px;'>◈ ADVISOR PROPOSAL: HDFC ERGO OPTIMA SECURE</p>
-        <p style='font-size:13px; color:#EAE3D6; line-height:1.6;'>
-        <b>Recommended Base:</b> ₹30.0 Lakhs <br>
-        <b>Secure Benefit:</b> Covers doubles to <b>₹60 Lakhs</b> from Day 1 at no cost. <br>
-        <b>Total Shield:</b> Combined with Star & Niva, family protection hits <b>₹90 Lakhs</b> immediately. <br>
-        <b>Est. Premium:</b> ₹34,000 - ₹38,000 (Approx for Age 52-53).
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-
-# ── TAB 4: ACTIONS ────────────────────────────────────────────────────────────
-elif tab == "Actions":
-    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Strategic Actions</p>", unsafe_allow_html=True)
-    actions = [
-        ("Monthly SIP Execution", "₹7.0 L auto-debit scheduled for the 25th.", "Vikram Batra"),
-        ("Health Upgrade", "Initiate HDFC Ergo Optima Secure (30L) for 1Cr target.", "Vikram Batra"),
-        ("Legacy Portfolio Exit", "Liquidate legacy units into NiftyBees / Gold.", "Vikram Batra"),
-        ("Tax Planning", "Booking 1.25L LTCG before Financial Year end.", "Vikram Batra")
-    ]
-    for act, desc, owner in actions:
-        st.markdown(f"<div style='padding:20px; border-bottom:1px solid #1C3050;'><div style='display:flex; justify-content:space-between;'><span style='color:#C8A84B; font-weight:600;'>{act}</span><span style='color:#7A9BBF; font-size:11px;'>{owner}</span></div><p style='font-size:13px; color:#EAE3D6; margin-top:5px;'>{desc}</p></div>", unsafe_allow_html=True)
+# Rest of the tabs (Portfolio, Protection, Actions) remain as per previous logic
