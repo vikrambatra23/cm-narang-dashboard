@@ -44,8 +44,7 @@ def fmt_l(n):  return f"₹{n/1e5:.1f} L"
 
 # ── LIVE DATA CONNECTION ─────────────────────────────────────────────────────
 # Using the CLEAN URL to avoid '400 Bad Request' errors
-URL = "https://docs.google.com/spreadsheets/d/1PZACfddE3VkcCWqYD-_0j_ERaBUT1SBQqPN63Vylvy0/edit"
-
+URL = "https://docs.google.com/spreadsheets/d/1PZACfddE3VkcCWqYD-_0j_ERaBUT1SBQqPN63Vylvy0/export?format=csv"
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 @st.cache_data(ttl=300) 
