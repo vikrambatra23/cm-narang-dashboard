@@ -43,23 +43,25 @@ def fmt_cr(n): return f"₹{n/1e7:.2f} Cr"
 def fmt_l(n):  return f"₹{n/1e5:.1f} L"
 
 # ── LIVE DATA CONNECTION ─────────────────────────────────────────────────────
-# Using the CLEAN URL to avoid '400 Bad Request' errors
+# This updated URL format forces Google to send raw data, fixing the 400 error.
 URL = "https://docs.google.com/spreadsheets/d/1PZACfddE3VkcCWqYD-_0j_ERaBUT1SBQqPN63Vylvy0/export?format=csv"
+
 conn = st.connection("gsheets", type=GSheetsConnection)
 
 @st.cache_data(ttl=300) 
 def fetch_data():
-    # Make sure the tab name in your Google Sheet is exactly "Portfolio"
-    df = conn.read(spreadsheet=URL, worksheet="Portfolio")
+    # When using /export?format=csv, Google sends the FIRST tab. 
+    # Make sure 'Portfolio' is the first tab on the left in your sheet.
+    df = conn.read(spreadsheet=URL)
     return df.dropna(subset=['Asset Name'])
 
 try:
     data_df = fetch_data()
-    # Ensure numeric types for calculations
+    # Convert 'Current Value' to numbers so we can add them up
     data_df['Current Value'] = pd.to_numeric(data_df['Current Value'], errors='coerce').fillna(0)
     total_nw = data_df['Current Value'].sum()
     
-    # Overview Logic: Grouping categories as requested
+    # Overview Logic: Grouping categories for the Pie Chart
     mf_val = data_df[data_df['Category'].str.contains('Aggressive|Stable|Legacy', na=False)]['Current Value'].sum()
     etf_val = data_df[data_df['Category'].str.contains('New Core|New Global', na=False)]['Current Value'].sum()
     gold_val = data_df[data_df['Category'].str.contains('Commodities', na=False)]['Current Value'].sum()
@@ -94,14 +96,14 @@ if not st.session_state.logged_in:
     st.stop()
 
 # ── MAIN UI ──────────────────────────────────────────────────────────────────
-st.markdown(f"<div style='font-size:20px; font-weight:500; margin-bottom:5px;'>Chandra Mohan Narang</div><p style='font-size:10px; color:#7A9BBF;'>VALUATION AS OF {pd.Timestamp.now().strftime('%d %B, %Y')}</p>", unsafe_allow_html=True)
+st.markdown(f"<div style='font-size:20px; font-weight:500;'>Chandra Mohan Narang</div><p style='font-size:10px; color:#7A9BBF;'>LIVE VALUATION DASHBOARD</p>", unsafe_allow_html=True)
 tab = st.radio("nav", ["Overview", "Portfolio", "Protection", "Actions"], horizontal=True, label_visibility="collapsed")
 
 # ── TAB 1: OVERVIEW ───────────────────────────────────────────────────────────
 if tab == "Overview":
     st.markdown(f"""
     <div style='background: linear-gradient(145deg, #0C1A2E, #112338); border: 1px solid #C8A84B40; border-radius: 20px; padding: 35px; text-align: center; margin-bottom: 25px;'>
-        <p style='font-size: 11px; color: #7A9BBF; text-transform: uppercase; letter-spacing: 2px;'>Consolidated Net Worth</p>
+        <p style='font-size: 11px; color: #7A9BBF; text-transform: uppercase; letter-spacing: 2px;'>Live Consolidated Net Worth</p>
         <h1 class='gold-text'>{fmt_cr(total_nw)}</h1>
     </div>
     """, unsafe_allow_html=True)
@@ -113,24 +115,25 @@ if tab == "Overview":
         fig.update_layout(showlegend=False, height=300, paper_bgcolor='rgba(0,0,0,0)', margin=dict(t=0, b=0, l=0, r=0))
         st.plotly_chart(fig, use_container_width=True)
     with c2:
-        st.markdown("<p style='font-size:11px; color:#C8A84B; font-weight:600; letter-spacing:1px;'>ALLOCATION SNAPSHOT</p>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size:11px; color:#C8A84B; font-weight:600;'>ALLOCATION SNAPSHOT</p>", unsafe_allow_html=True)
         for label, val in OVERVIEW_MAP.items():
             if val > 0:
                 st.markdown(f"<div style='display:flex; justify-content:space-between; margin-bottom:12px; border-bottom:1px solid #1C3050; padding-bottom:4px;'><span style='color:#7A9BBF;'>{label}</span><span style='font-family:\"DM Mono\";'>{fmt_l(val)}</span></div>", unsafe_allow_html=True)
 
 # ── TAB 2: PORTFOLIO ──────────────────────────────────────────────────────────
 elif tab == "Portfolio":
-    st.markdown("<p style='font-size:18px; color:#C8A84B; font-weight:500;'>Detailed Holdings Breakdown</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:18px; color:#C8A84B;'>Detailed Holding Inventory</p>", unsafe_allow_html=True)
     
-    # Filter columns to only what we need for the table
+    # Selecting columns from your sheet
     display_df = data_df[['Asset Name', 'Category', 'Units / Qty', 'Current Value']].copy()
     
-    # Calculate live allocation percentages
+    # Calculate live allocation %
     display_df['Allocation %'] = (display_df['Current Value'] / total_nw * 100).round(2).astype(str) + '%'
     
-    # Format the Value column into Lakhs
+    # Format Currency column
     display_df['Current Value'] = display_df['Current Value'].apply(fmt_l)
     
+    # Show the table
     st.dataframe(display_df, use_container_width=True, hide_index=True)
 
 # ── TABS 3 & 4 ───────────────────────────────────────────────────────────────
