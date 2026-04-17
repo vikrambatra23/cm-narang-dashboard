@@ -2,6 +2,30 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 from streamlit_gsheets import GSheetsConnection
+import base64
+from pathlib import Path
+
+# ── 0. LOGO (Quantis Capital brand mark) ──────────────────────────────────────
+@st.cache_data
+def _logo_b64():
+    p = Path(__file__).parent / "assets" / "quantis_icon.png"
+    return base64.b64encode(p.read_bytes()).decode()
+
+def logo_lockup(icon_px=40, text_px=11, gap=12, align="left"):
+    b64 = _logo_b64()
+    text_align = "left" if align == "left" else "center"
+    return (
+        f"<div style='display:inline-flex; align-items:center; gap:{gap}px; text-align:{text_align};'>"
+        f"<img src='data:image/png;base64,{b64}' style='height:{icon_px}px; width:auto; "
+        f"filter: drop-shadow(0 0 10px rgba(200,168,75,0.18));'/>"
+        f"<div style='line-height:1.2;'>"
+        f"<div style='font-weight:700; font-size:{text_px}px; letter-spacing:4px; "
+        f"background: linear-gradient(90deg, #C8A84B, #E2CC8A); "
+        f"-webkit-background-clip: text; -webkit-text-fill-color: transparent;'>QUANTIS</div>"
+        f"<div style='color:#7A9BBF; font-size:{max(8, text_px-2)}px; letter-spacing:5px; margin-top:1px;'>CAPITAL</div>"
+        f"</div>"
+        f"</div>"
+    )
 
 # ── 1. PAGE CONFIGURATION ─────────────────────────────────────────────────────
 st.set_page_config(
@@ -216,7 +240,14 @@ if not st.session_state.logged_in:
     st.write("##")
     _, col, _ = st.columns([1, 1.5, 1])
     with col:
-        st.markdown("<div class='login-card'><h2 style='color:#C8A84B; margin-bottom:0;'>◈ PRIVATE WEALTH</h2><p style='color:#7A9BBF; font-size:12px; letter-spacing:2px; margin-bottom:30px;'>CHANDRA MOHAN NARANG</p></div>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div class='login-card'>"
+            f"<div style='display:flex; justify-content:center; margin-bottom:18px;'>{logo_lockup(icon_px=56, text_px=14, gap=14)}</div>"
+            f"<p style='color:#C8A84B; font-size:11px; letter-spacing:3px; margin:0 0 4px 0; font-weight:600;'>PRIVATE WEALTH</p>"
+            f"<p style='color:#7A9BBF; font-size:11px; letter-spacing:2px; margin-bottom:30px;'>CHANDRA MOHAN NARANG</p>"
+            f"</div>",
+            unsafe_allow_html=True,
+        )
         u = st.text_input("Username", placeholder="Identity")
         p = st.text_input("Password", type="password", placeholder="Secret Key")
         if st.button("AUTHENTICATE & ACCESS"):
@@ -230,7 +261,18 @@ if not st.session_state.logged_in:
 # ── 7. HEADER ─────────────────────────────────────────────────────────────────
 col_h1, col_h2 = st.columns([2, 1])
 with col_h1:
-    st.markdown("<div style='display:flex; align-items:center;'><span class='monogram'>◈</span><div><h1 style='background: linear-gradient(90deg, #C8A84B, #E2CC8A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; font-size: 38px; margin:0; padding:0;'>Chandra Mohan Narang</h1><p style='color: #7A9BBF; font-size: 11px; text-transform: uppercase; letter-spacing: 2.5px; margin: 2px 0 0 0;'>Family Office Dashboard</p><div class='header-accent'></div></div></div>", unsafe_allow_html=True)
+    st.markdown(
+        f"<div style='display:flex; align-items:center; gap:16px;'>"
+        f"<img src='data:image/png;base64,{_logo_b64()}' style='height:48px; width:auto; "
+        f"filter: drop-shadow(0 0 10px rgba(200,168,75,0.2));'/>"
+        f"<div>"
+        f"<div style='color:#C8A84B; font-size:10px; letter-spacing:4px; font-weight:700; margin-bottom:2px;'>QUANTIS CAPITAL</div>"
+        f"<h1 style='background: linear-gradient(90deg, #C8A84B, #E2CC8A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; font-size: 34px; margin:0; padding:0; line-height:1.1;'>Chandra Mohan Narang</h1>"
+        f"<p style='color: #7A9BBF; font-size: 11px; text-transform: uppercase; letter-spacing: 2.5px; margin: 2px 0 0 0;'>Family Office Dashboard</p>"
+        f"<div class='header-accent'></div>"
+        f"</div></div>",
+        unsafe_allow_html=True,
+    )
 with col_h2:
     st.markdown(f"<div style='text-align: right; padding-top: 18px;'><p style='color: #5C7089; font-size: 10px; letter-spacing: 2px; margin-bottom: 2px;'>VALUATION DATE</p><p style='color: #EAE3D6; font-size: 14px; font-weight: 500; font-family: \"JetBrains Mono\", monospace;'>{pd.Timestamp.now().strftime('%d %B, %Y')}</p></div>", unsafe_allow_html=True)
 
