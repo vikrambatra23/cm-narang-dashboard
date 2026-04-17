@@ -19,7 +19,12 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; background-color:
 #MainMenu, footer, header { visibility: hidden; }
 .stDeployButton { display: none; }
 .block-container { padding: 1.5rem 2rem 4rem 2rem; max-width: 1100px; }
-.stApp { background-color: #050A14 !important; }
+.stApp {
+    background:
+        radial-gradient(ellipse at top left, rgba(200,168,75,0.05) 0%, transparent 45%),
+        radial-gradient(ellipse at bottom right, rgba(87,135,199,0.04) 0%, transparent 45%),
+        #050A14 !important;
+}
 p, div, span, label { color: #EAE3D6; }
 
 .gold-text {
@@ -30,11 +35,11 @@ p, div, span, label { color: #EAE3D6; }
 }
 
 .login-card {
-    background: rgba(12, 26, 46, 0.8);
+    background: rgba(12, 26, 46, 0.85);
     border: 1px solid #C8A84B;
     border-radius: 20px;
     padding: 40px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    box-shadow: 0 10px 40px rgba(200,168,75,0.15), inset 0 1px 0 rgba(226,204,138,0.1);
     text-align: center;
 }
 
@@ -46,19 +51,121 @@ div.stButton > button:first-child {
     border-radius: 10px !important;
     padding: 12px 24px !important;
     width: 100%;
+    transition: all 0.3s ease !important;
+}
+div.stButton > button:first-child:hover {
+    box-shadow: 0 6px 22px rgba(200,168,75,0.35) !important;
+    transform: translateY(-1px);
 }
 
 div[role="radiogroup"] label {
     background: #0C1A2E !important; border: 1px solid #1C3050 !important;
     border-radius: 12px !important; padding: 10px 24px !important; color: #5C7089 !important;
+    transition: all 0.25s ease !important;
 }
+div[role="radiogroup"] label:hover { border-color: rgba(200,168,75,0.4) !important; color: #E2CC8A !important; }
 div[role="radiogroup"] label:has(input:checked) {
     background: rgba(200,168,75,0.12) !important; border-color: #C8A84B !important; color: #C8A84B !important;
+    box-shadow: 0 0 18px rgba(200,168,75,0.15);
 }
 
-.static-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-.static-table th { background: #0C1A2E; color: #C8A84B; text-align: left; padding: 15px; font-size: 11px; text-transform: uppercase; border-bottom: 2px solid #1C3050; }
-.static-table td { padding: 15px; border-bottom: 1px solid #1C3050; font-size: 13px; color: #EAE3D6; }
+/* Header accent */
+.header-accent {
+    height: 3px; width: 80px;
+    background: linear-gradient(90deg, #C8A84B, transparent);
+    border-radius: 2px; margin: 6px 0 0 0;
+}
+.monogram {
+    display: inline-block; color: #C8A84B; font-size: 34px;
+    margin-right: 14px; vertical-align: middle;
+    filter: drop-shadow(0 0 10px rgba(200,168,75,0.35));
+}
+
+/* KPI Tiles */
+.kpi-tile {
+    background: linear-gradient(145deg, #0C1A2E 0%, #0A1528 100%);
+    border: 1px solid #1C3050;
+    border-radius: 14px;
+    padding: 18px 22px;
+    transition: all 0.3s ease;
+    position: relative; overflow: hidden;
+    margin-bottom: 4px;
+}
+.kpi-tile::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent 0%, #C8A84B 50%, transparent 100%);
+    opacity: 0.7;
+}
+.kpi-tile:hover {
+    border-color: rgba(200,168,75,0.5);
+    box-shadow: 0 8px 24px rgba(200,168,75,0.12);
+    transform: translateY(-2px);
+}
+.kpi-label { color: #7A9BBF; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; margin: 0 0 8px 0; font-weight: 500; }
+.kpi-value { color: #E2CC8A; font-size: 24px; font-weight: 600; font-family: 'JetBrains Mono', monospace; margin: 0; }
+.kpi-icon { float: right; color: #C8A84B; font-size: 22px; opacity: 0.55; margin-top: -2px; }
+
+/* Section divider */
+.section-divider { display: flex; align-items: center; gap: 14px; margin: 32px 0 20px 0; }
+.section-divider::before, .section-divider::after {
+    content: ''; flex: 1; height: 1px;
+    background: linear-gradient(90deg, transparent, #1C3050 35%, #1C3050 65%, transparent);
+}
+.section-divider-mark { color: #C8A84B; font-size: 12px; letter-spacing: 6px; opacity: 0.8; }
+
+/* Insurance cards */
+.insurance-card {
+    background: linear-gradient(145deg, #0C1A2E 0%, #0A1528 100%);
+    padding: 22px; border-radius: 14px; border: 1px solid #1C3050;
+    transition: all 0.3s ease; position: relative; overflow: hidden;
+}
+.insurance-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, #C8A84B, transparent);
+}
+.insurance-card:hover {
+    border-color: rgba(200,168,75,0.4);
+    box-shadow: 0 6px 20px rgba(200,168,75,0.1);
+    transform: translateY(-2px);
+}
+.insurance-icon { font-size: 22px; color: #C8A84B; opacity: 0.85; margin-bottom: 10px; display: block; }
+
+/* Action cards */
+.action-card {
+    padding: 20px 24px;
+    border-left: 3px solid #1C3050;
+    background: linear-gradient(90deg, rgba(12,26,46,0.45) 0%, transparent 100%);
+    margin-bottom: 12px;
+    border-radius: 0 12px 12px 0;
+    transition: all 0.3s ease;
+}
+.action-card:hover {
+    border-left-color: #C8A84B;
+    background: linear-gradient(90deg, rgba(200,168,75,0.08) 0%, transparent 100%);
+    transform: translateX(4px);
+}
+.action-number {
+    display: inline-flex;
+    align-items: center; justify-content: center;
+    width: 28px; height: 28px;
+    background: linear-gradient(135deg, #E2CC8A, #B38F36);
+    color: #050A14;
+    border-radius: 50%;
+    font-weight: 700; font-size: 12px;
+    margin-right: 14px;
+    vertical-align: middle;
+    box-shadow: 0 2px 10px rgba(200,168,75,0.3);
+    flex-shrink: 0;
+}
+
+/* Portfolio table polish */
+.static-table { width: 100%; border-collapse: collapse; margin-top: 20px; border-radius: 12px; overflow: hidden; }
+.static-table th { background: #0C1A2E; color: #C8A84B; text-align: left; padding: 15px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #C8A84B; }
+.static-table td { padding: 14px 15px; border-bottom: 1px solid #1C3050; font-size: 13px; color: #EAE3D6; }
+.static-table tbody tr { transition: background 0.2s ease; }
+.static-table tbody tr:nth-child(even) td { background: rgba(12,26,46,0.35); }
+.static-table tbody tr:hover td { background: rgba(200,168,75,0.07); color: #E2CC8A; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -123,26 +230,37 @@ if not st.session_state.logged_in:
 # ── 7. HEADER ─────────────────────────────────────────────────────────────────
 col_h1, col_h2 = st.columns([2, 1])
 with col_h1:
-    st.markdown("<h1 style='background: linear-gradient(90deg, #C8A84B, #E2CC8A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; font-size: 38px; margin-bottom: 0px;'>Chandra Mohan Narang</h1><p style='color: #7A9BBF; font-size: 11px; text-transform: uppercase; letter-spacing: 2px; margin-top: -5px;'>Family Office Dashboard</p>", unsafe_allow_html=True)
+    st.markdown("<div style='display:flex; align-items:center;'><span class='monogram'>◈</span><div><h1 style='background: linear-gradient(90deg, #C8A84B, #E2CC8A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; font-size: 38px; margin:0; padding:0;'>Chandra Mohan Narang</h1><p style='color: #7A9BBF; font-size: 11px; text-transform: uppercase; letter-spacing: 2.5px; margin: 2px 0 0 0;'>Family Office Dashboard</p><div class='header-accent'></div></div></div>", unsafe_allow_html=True)
 with col_h2:
-    st.markdown(f"<div style='text-align: right; padding-top: 20px;'><p style='color: #5C7089; font-size: 10px; margin-bottom: 0;'>VALUATION DATE</p><p style='color: #EAE3D6; font-size: 14px; font-weight: 500;'>{pd.Timestamp.now().strftime('%d %B, %Y')}</p></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: right; padding-top: 18px;'><p style='color: #5C7089; font-size: 10px; letter-spacing: 2px; margin-bottom: 2px;'>VALUATION DATE</p><p style='color: #EAE3D6; font-size: 14px; font-weight: 500; font-family: \"JetBrains Mono\", monospace;'>{pd.Timestamp.now().strftime('%d %B, %Y')}</p></div>", unsafe_allow_html=True)
 
-st.markdown("<hr style='margin: 5px 0 15px 0; border: 1px solid #1C3050;'>", unsafe_allow_html=True)
+st.markdown("<hr style='margin: 12px 0 18px 0; border: 0; border-top: 1px solid #1C3050;'>", unsafe_allow_html=True)
 tab = st.radio("nav", ["Overview", "Portfolio", "Protection", "Actions"], horizontal=True, label_visibility="collapsed")
 
 # ── 8. TABS ───────────────────────────────────────────────────────────────────
 if tab == "Overview":
+    deployed_v = total_nw - cash_v
+    k1, k2, k3 = st.columns(3)
+    with k1:
+        st.markdown(f"<div class='kpi-tile'><span class='kpi-icon'>◈</span><p class='kpi-label'>Net Worth</p><p class='kpi-value'>{fmt_cr(total_nw)}</p></div>", unsafe_allow_html=True)
+    with k2:
+        st.markdown(f"<div class='kpi-tile'><span class='kpi-icon'>▲</span><p class='kpi-label'>Deployed Capital</p><p class='kpi-value'>{fmt_cr(deployed_v)}</p></div>", unsafe_allow_html=True)
+    with k3:
+        st.markdown(f"<div class='kpi-tile'><span class='kpi-icon'>✦</span><p class='kpi-label'>Cash · Ready to Deploy</p><p class='kpi-value'>{fmt_l(cash_v)}</p></div>", unsafe_allow_html=True)
+
+    st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
+
     fig_gauge = go.Figure(go.Indicator(
         mode = "gauge+number",
-        value = total_nw / 10000000, 
+        value = total_nw / 10000000,
         number = {'suffix': " Cr", 'font': {'color': '#E2CC8A', 'size': 50}},
         title = {'text': "GOAL PROGRESS: 10 CR JOURNEY", 'font': {'size': 12, 'color': '#7A9BBF'}},
-        gauge = {'axis': {'range': [0, 10]}, 'bar': {'color': "#C8A84B"}, 'bgcolor': "#0C1A2E", 'steps': [{'range': [0, 10], 'color': '#0C1A2E'}]}
+        gauge = {'axis': {'range': [0, 10], 'tickcolor': '#1C3050', 'tickfont': {'color': '#5C7089', 'size': 10}}, 'bar': {'color': "#C8A84B", 'thickness': 0.85}, 'bgcolor': "#0C1A2E", 'borderwidth': 0, 'steps': [{'range': [0, 10], 'color': '#0C1A2E'}], 'threshold': {'line': {'color': '#E2CC8A', 'width': 2}, 'thickness': 0.9, 'value': total_nw / 10000000}}
     ))
     fig_gauge.update_layout(height=300, paper_bgcolor='rgba(0,0,0,0)', margin=dict(t=50, b=20, l=20, r=20))
     st.plotly_chart(fig_gauge, use_container_width=True)
 
-    st.markdown("<div style='margin: 10px 0 30px 0;'><hr style='border: 0; border-top: 1px solid #1C3050; margin-bottom: 3px;'><hr style='border: 0; border-top: 1px solid #1C3050;'></div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
 
     c1, c2 = st.columns([1, 1])
     with c1:
@@ -158,7 +276,7 @@ if tab == "Overview":
                 st.markdown(f"<div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid #1C3050; padding-bottom:6px;'><span>{label}{badge}</span><span style='font-family:\"JetBrains Mono\";'>{fmt_l(val)}</span></div>", unsafe_allow_html=True)
 
 elif tab == "Portfolio":
-    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Detailed Holding Inventory</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px;'>Detailed Holding Inventory</p>", unsafe_allow_html=True)
     disp = assets_df[['Asset Name', 'Category', 'Units / Qty', 'Current Value', 'Val_Num']].copy()
     disp = disp.sort_values(by='Val_Num', ascending=False) 
     disp['Alloc %'] = (disp['Val_Num'] / total_nw * 100).round(1).astype(str) + '%'
@@ -168,12 +286,12 @@ elif tab == "Portfolio":
     st.markdown(html + "</tbody></table>", unsafe_allow_html=True)
 
 elif tab == "Protection":
-    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Term Life Protection</p>", unsafe_allow_html=True)
-    st.markdown("<div style='background:#0C1A2E; padding:25px; border-radius:15px; border:1px solid #1C3050;'><p style='color:#7A9BBF; font-size:12px;'>Sum Insured</p><h2 style='margin:0;'>₹1.00 Crore</h2><p style='color:#C8A84B; font-size:11px;'>Primary Policy · Nominee: Ritu Narang</p></div>", unsafe_allow_html=True)
-    st.markdown("<br><p style='font-size:20px; color:#C8A84B; font-weight:500;'>Family Health Shield</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px;'>Term Life Protection</p>", unsafe_allow_html=True)
+    st.markdown("<div class='insurance-card' style='padding:28px;'><span class='insurance-icon'>◈</span><p style='color:#7A9BBF; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; margin:0 0 6px 0;'>Sum Insured</p><h2 style='margin:0; font-size:32px; background: linear-gradient(90deg, #C8A84B, #E2CC8A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight:700;'>₹1.00 Crore</h2><p style='color:#C8A84B; font-size:11px; margin-top:8px; letter-spacing:0.5px;'>Primary Policy · Nominee: Ritu Narang</p></div>", unsafe_allow_html=True)
+    st.markdown("<br><p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px;'>Family Health Shield</p>", unsafe_allow_html=True)
     h1, h2 = st.columns(2)
-    with h1: st.markdown("<div style='background:#0C1A2E; padding:20px; border-radius:12px; border:1px solid #1C3050;'><p style='color:#7A9BBF; font-size:11px;'>Star Comprehensive</p><p style='font-size:18px; margin:0;'>₹20.0 L</p></div>", unsafe_allow_html=True)
-    with h2: st.markdown("<div style='background:#0C1A2E; padding:20px; border-radius:12px; border:1px solid #1C3050;'><p style='color:#7A9BBF; font-size:11px;'>Niva Bupa ReAssure 2.0</p><p style='font-size:18px; margin:0;'>₹10.0 L</p></div>", unsafe_allow_html=True)
+    with h1: st.markdown("<div class='insurance-card'><span class='insurance-icon'>✦</span><p style='color:#7A9BBF; font-size:11px; letter-spacing:1px; text-transform:uppercase; margin:0 0 4px 0;'>Star Comprehensive</p><p style='font-size:20px; margin:0; font-weight:600; font-family:\"JetBrains Mono\", monospace; color:#EAE3D6;'>₹20.0 L</p></div>", unsafe_allow_html=True)
+    with h2: st.markdown("<div class='insurance-card'><span class='insurance-icon'>✦</span><p style='color:#7A9BBF; font-size:11px; letter-spacing:1px; text-transform:uppercase; margin:0 0 4px 0;'>Niva Bupa ReAssure 2.0</p><p style='font-size:20px; margin:0; font-weight:600; font-family:\"JetBrains Mono\", monospace; color:#EAE3D6;'>₹10.0 L</p></div>", unsafe_allow_html=True)
 
     st.markdown("""
     <div style='background:rgba(200,168,75,0.08); border-left:3px solid #C8A84B; padding:16px 20px; border-radius:8px; margin-top:24px;'>
@@ -184,7 +302,7 @@ elif tab == "Protection":
     """, unsafe_allow_html=True)
 
 elif tab == "Actions":
-    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Strategic Actions</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px;'>Strategic Actions</p>", unsafe_allow_html=True)
     actions = [
         ("Monthly Wealth Infusion", "SIP auto-debits begin on the 25th. ₹6 L flows systematically across allocations; ₹1 L into MON100 will be manually deployed by Vikram Batra to avoid poor entry rates.", "Vikram Batra"),
         ("FD Tax Efficiency", "₹75 L in fixed deposits will be rolled into arbitrage funds as each matures, to improve post-tax yield.", "Vikram Batra"),
@@ -192,5 +310,17 @@ elif tab == "Actions":
         ("Tactical Equity Allocation", "Select names in the Energy & Pharma sectors appear technically strong. Seeking client approval for ₹10–15 L direct equity deployment across these sectors.", "Vikram Batra"),
         ("Health Cover Expansion", "Obtain quotes and initiate an additional ₹30 L base HDFC ERGO Optima Secure policy.", "CM Narang"),
     ]
-    for act, desc, owner in actions:
-        st.markdown(f"<div style='padding:20px; border-bottom:1px solid #1C3050;'><div style='display:flex; justify-content:space-between;'><span style='color:#C8A84B; font-weight:600;'>{act}</span><span style='color:#7A9BBF; font-size:11px;'>{owner}</span></div><p style='font-size:13px; color:#EAE3D6; margin-top:5px;'>{desc}</p></div>", unsafe_allow_html=True)
+    for i, (act, desc, owner) in enumerate(actions, 1):
+        st.markdown(
+            f"<div class='action-card'>"
+            f"<div style='display:flex; justify-content:space-between; align-items:flex-start;'>"
+            f"<div style='display:flex; align-items:center; flex:1;'>"
+            f"<span class='action-number'>{i}</span>"
+            f"<span style='color:#C8A84B; font-weight:600; font-size:15px; letter-spacing:0.3px;'>{act}</span>"
+            f"</div>"
+            f"<span style='color:#7A9BBF; font-size:10px; letter-spacing:1.2px; text-transform:uppercase; padding-top:8px; white-space:nowrap;'>{owner}</span>"
+            f"</div>"
+            f"<p style='font-size:13px; color:#EAE3D6; margin:10px 0 0 42px; line-height:1.65;'>{desc}</p>"
+            f"</div>",
+            unsafe_allow_html=True
+        )
