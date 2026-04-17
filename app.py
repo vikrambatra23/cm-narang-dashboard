@@ -153,7 +153,9 @@ if tab == "Overview":
     with c2:
         st.markdown("<p style='font-size:12px; color:#C8A84B; font-weight:600; letter-spacing:1px; margin-bottom:20px;'>ALLOCATION SUMMARY</p>", unsafe_allow_html=True)
         for label, val in OVERVIEW_MAP.items():
-            if val > 0: st.markdown(f"<div style='display:flex; justify-content:space-between; margin-bottom:18px; border-bottom:1px solid #1C3050; padding-bottom:6px;'><span>{label}</span><span style='font-family:\"JetBrains Mono\";'>{fmt_l(val)}</span></div>", unsafe_allow_html=True)
+            if val > 0:
+                badge = " <span style='background:rgba(87,199,133,0.15); color:#57C785; font-size:9px; padding:2px 8px; border-radius:10px; margin-left:8px; font-weight:600; letter-spacing:0.5px; vertical-align:middle;'>READY TO DEPLOY</span>" if label == "Cash" else ""
+                st.markdown(f"<div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid #1C3050; padding-bottom:6px;'><span>{label}{badge}</span><span style='font-family:\"JetBrains Mono\";'>{fmt_l(val)}</span></div>", unsafe_allow_html=True)
 
 elif tab == "Portfolio":
     st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Detailed Holding Inventory</p>", unsafe_allow_html=True)
@@ -173,8 +175,22 @@ elif tab == "Protection":
     with h1: st.markdown("<div style='background:#0C1A2E; padding:20px; border-radius:12px; border:1px solid #1C3050;'><p style='color:#7A9BBF; font-size:11px;'>Star Comprehensive</p><p style='font-size:18px; margin:0;'>₹20.0 L</p></div>", unsafe_allow_html=True)
     with h2: st.markdown("<div style='background:#0C1A2E; padding:20px; border-radius:12px; border:1px solid #1C3050;'><p style='color:#7A9BBF; font-size:11px;'>Niva Bupa ReAssure 2.0</p><p style='font-size:18px; margin:0;'>₹10.0 L</p></div>", unsafe_allow_html=True)
 
+    st.markdown("""
+    <div style='background:rgba(200,168,75,0.08); border-left:3px solid #C8A84B; padding:16px 20px; border-radius:8px; margin-top:24px;'>
+    <p style='color:#C8A84B; font-size:11px; letter-spacing:1.5px; margin:0 0 8px 0; font-weight:600;'>ADVISORY NOTE</p>
+    <p style='color:#EAE3D6; font-size:13px; margin:0; line-height:1.6;'>Current health cover stands at <strong>₹30 L</strong>; recommended total exposure is closer to <strong>₹1 Crore</strong>. We recommend adding a <strong>₹30 L HDFC ERGO Optima Secure</strong> policy, which provides <strong>₹60 L effective cover from Day 1<sup style='color:#C8A84B;'>*</sup></strong>.</p>
+    <p style='color:#7A9BBF; font-size:10px; margin:10px 0 0 0; font-style:italic;'>* Day-1 enhanced cover feature to be verified with the HDFC ERGO agent.</p>
+    </div>
+    """, unsafe_allow_html=True)
+
 elif tab == "Actions":
     st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500;'>Strategic Actions</p>", unsafe_allow_html=True)
-    actions = [("Monthly Wealth Infusion", "₹7.0 L SIP on the 25th.", "Vikram Batra"), ("Legacy Exit Strategy", "Phase out UNIESCO and RELIND into NiftyBees.", "Vikram Batra")]
+    actions = [
+        ("Monthly Wealth Infusion", "SIP auto-debits begin on the 25th. ₹6 L flows systematically across allocations; ₹1 L into MON100 will be manually deployed by Vikram Batra to avoid poor entry rates.", "Vikram Batra"),
+        ("FD Tax Efficiency", "₹75 L in fixed deposits will be rolled into arbitrage funds as each matures, to improve post-tax yield.", "Vikram Batra"),
+        ("Legacy Exit Strategy", "Phase out of Satellite MFs over the next 5 years in a tax-efficient manner.", "Vikram Batra"),
+        ("Tactical Equity Allocation", "Select names in the Energy & Pharma sectors appear technically strong. Seeking client approval for ₹10–15 L direct equity deployment across these sectors.", "Vikram Batra"),
+        ("Health Cover Expansion", "Obtain quotes and initiate an additional ₹30 L base HDFC ERGO Optima Secure policy.", "CM Narang"),
+    ]
     for act, desc, owner in actions:
         st.markdown(f"<div style='padding:20px; border-bottom:1px solid #1C3050;'><div style='display:flex; justify-content:space-between;'><span style='color:#C8A84B; font-weight:600;'>{act}</span><span style='color:#7A9BBF; font-size:11px;'>{owner}</span></div><p style='font-size:13px; color:#EAE3D6; margin-top:5px;'>{desc}</p></div>", unsafe_allow_html=True)
