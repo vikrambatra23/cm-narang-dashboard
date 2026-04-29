@@ -313,8 +313,52 @@ elif tab == "Plan":
 
     # ── AIF Funding ──
     st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ AIF Funding Plan · ₹1 Cr</p>", unsafe_allow_html=True)
-    aif_html = "<div class='insurance-card' style='padding:24px 28px;'><span class='insurance-icon'>✦</span>"
+    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ AIF Funding Flow · ₹1 Cr</p>", unsafe_allow_html=True)
+
+    fig_sankey = go.Figure(go.Sankey(
+        arrangement='snap',
+        node=dict(
+            pad=24, thickness=22,
+            line=dict(color='rgba(200,168,75,0.4)', width=0.6),
+            label=[
+                "₹70 L · Existing Cash",
+                "₹24 L · FD (5 Jun)",
+                "₹6 L · Surplus Top-up",
+                "Liquid Fund Kitty · ₹100 L",
+                "AIF · Cat III · ₹1 Cr"
+            ],
+            color=['#52A2FF', '#57C785', '#46C1C1', '#C8A84B', '#E2CC8A'],
+            x=[0.01, 0.01, 0.01, 0.45, 0.99],
+            y=[0.15, 0.50, 0.85, 0.50, 0.50]
+        ),
+        link=dict(
+            source=[0, 1, 2, 3],
+            target=[3, 3, 3, 4],
+            value=[70, 24, 6, 100],
+            color=[
+                'rgba(82,162,255,0.45)',
+                'rgba(87,199,133,0.45)',
+                'rgba(70,193,193,0.45)',
+                'rgba(200,168,75,0.55)'
+            ],
+            label=[
+                'Earns ~6.5–7% in liquid till capital call',
+                'Top-up to kitty',
+                'Top-up to kitty',
+                'Drawn over Jun–Dec 2026 on capital calls'
+            ]
+        )
+    ))
+    fig_sankey.update_layout(
+        height=340,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        font=dict(family='Inter, sans-serif', color='#EAE3D6', size=12),
+        margin=dict(t=20, b=20, l=20, r=20)
+    )
+    st.plotly_chart(fig_sankey, use_container_width=True)
+
+    aif_html = "<div class='insurance-card' style='padding:18px 24px; margin-top:8px;'><span class='insurance-icon'>✦</span>"
     for _, r in aif.iterrows():
         amt = f" — <span style='font-family:\"JetBrains Mono\"; color:#E2CC8A;'>₹{r['Amount (Rs L)']} L</span>" if str(r['Amount (Rs L)']).strip() not in ['','nan'] else ""
         aif_html += f"<p style='margin:6px 0; font-size:13px; color:#EAE3D6;'><strong style='color:#C8A84B;'>{r['Item']}:</strong> {r['Detail']}{amt} <span style='color:#7A9BBF; font-size:11px;'>{r['Notes']}</span></p>"
