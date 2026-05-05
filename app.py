@@ -366,12 +366,11 @@ elif tab == "Portfolio":
 
 elif tab == "Plan":
     plan_df = fetch_plan()
-    cf    = plan_df[plan_df['Section'] == 'Cashflow']
-    alloc = plan_df[plan_df['Section'] == 'Allocation']
+    cf = plan_df[plan_df['Section'] == 'Cashflow']
 
     # ── Hero summary ──
     st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px; margin-bottom:4px;'>Strategic Plan · 5-Year Horizon</p>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#7A9BBF; font-size:12px; letter-spacing:1px; margin-bottom:24px;'>CASH FLOW MAP · THREE STRATEGIC PATHS</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#7A9BBF; font-size:12px; letter-spacing:1px; margin-bottom:24px;'>CASH FLOW MAP · TWO-PHASE ALLOCATION</p>", unsafe_allow_html=True)
 
     # ── Cash Flow ──
     st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ Cash Flow Map (8 Months)</p>", unsafe_allow_html=True)
@@ -383,66 +382,78 @@ elif tab == "Plan":
     cf_html += "</tbody></table>"
     st.markdown(cf_html, unsafe_allow_html=True)
 
-    # ── Three Allocation Paths ──
+    # ── Two-Phase Allocation ──
     st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ Three Strategic Paths</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ Two-Phase Allocation · Catch-up → De-risk</p>", unsafe_allow_html=True)
 
-    # Path A is overridden in code: Aggressive Diversified mix (45/30/10/15)
-    PATH_A_OVERRIDE = {
-        'risk': 'Aggressive Diversified',
-        'ret':  '11–12% pre-tax',
-        'rows': [
-            ('Mid + Small Cap MF',  '45%', 'Direct plans · Bandhan, Nippon, HDFC small + Edelweiss/Kotak mid · ~14% pre-tax'),
-            ('Flexi Cap MF',        '30%', 'Cross-cycle anchor · Parag Parikh, HDFC, ICICI Pru · ~12% pre-tax'),
-            ('International',       '10%', 'US/Global feeder funds for geographic diversification · ~12% pre-tax'),
-            ('Debt (Arbitrage)',    '15%', 'Equity-tax treatment, low-correlation cushion · ~7% pre-tax'),
-        ]
-    }
+    PHASES = [
+        {
+            'tag':      'NOW · 2026-27',
+            'title':    'Catch-up · Aggressive',
+            'subtitle': 'Target: 14-15% pre-tax',
+            'note':     'Mid/smallcap has been ~flat for 2 years. Front-load equity to ride the mean-reversion.',
+            'rows': [
+                ('Mid + Small Cap MF',     '50%', 'Mean-reversion bet · 2-yr flat → ~16-17%'),
+                ('Flexi Cap MF',           '25%', 'Active anchor · ~13-14%'),
+                ('Tactical Direct Equity', '10%', 'Energy + Pharma sectors · ~17-18%'),
+                ('International',          '10%', 'US/Global feeder · ~12%'),
+                ('Liquid Buffer',          '5%',  'Dry powder for dips · ~7%'),
+            ]
+        },
+        {
+            'tag':      'FROM 2027',
+            'title':    'De-risk · Moderate',
+            'subtitle': 'Target: 11-12% pre-tax',
+            'note':     'After Y1 catch-up, lock in gains and rebuild downside cushion. Same engine, lower beta.',
+            'rows': [
+                ('Mid + Small Cap MF',     '35%', 'Trimmed from 50% · ~14%'),
+                ('Flexi Cap MF',           '30%', 'Increased anchor · ~12%'),
+                ('Large Cap Index',        '10%', 'NIFTYBEES + Junior · ~11%'),
+                ('International',          '10%', 'Hold steady · ~12%'),
+                ('Debt (Arbitrage+Bonds)', '15%', 'New cushion · ~7%'),
+            ]
+        }
+    ]
 
-    cols = st.columns(3)
-    for col, path_label in zip(cols, ['A','B','C']):
-        if path_label == 'A':
-            risk = PATH_A_OVERRIDE['risk']
-            ret  = PATH_A_OVERRIDE['ret']
-            body = "".join([
-                f"<div style='display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #1C3050;'>"
-                f"<span style='font-size:12px; color:#EAE3D6;'>{item}</span>"
-                f"<span style='font-size:12px; color:#C8A84B; font-family:\"JetBrains Mono\"; font-weight:600;'>{detail}</span>"
-                f"</div>"
-                f"<p style='font-size:10px; color:#7A9BBF; margin:2px 0 8px 0; line-height:1.4;'>{note}</p>"
-                for item, detail, note in PATH_A_OVERRIDE['rows']
-            ])
-        else:
-            path_rows = alloc[alloc['Path'] == path_label]
-            risk = path_rows[path_rows['Item'] == 'Risk Level']['Detail'].values
-            ret  = path_rows[path_rows['Item'] == 'Expected Return']['Detail'].values
-            risk = risk[0] if len(risk) else ''
-            ret  = ret[0]  if len(ret)  else ''
-            body = "".join([
-                f"<div style='display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #1C3050;'>"
-                f"<span style='font-size:12px; color:#EAE3D6;'>{r['Item']}</span>"
-                f"<span style='font-size:12px; color:#C8A84B; font-family:\"JetBrains Mono\"; font-weight:600;'>{r['Detail']}</span>"
-                f"</div>"
-                f"<p style='font-size:10px; color:#7A9BBF; margin:2px 0 8px 0; line-height:1.4;'>{r['Notes']}</p>"
-                for _, r in path_rows.iterrows()
-                if r['Item'] not in ('Risk Level','Expected Return','5-yr deploy')
-            ])
+    cols = st.columns(2)
+    for col, phase in zip(cols, PHASES):
+        body = "".join([
+            f"<div style='display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #1C3050;'>"
+            f"<span style='font-size:12px; color:#EAE3D6;'>{item}</span>"
+            f"<span style='font-size:12px; color:#C8A84B; font-family:\"JetBrains Mono\"; font-weight:600;'>{detail}</span>"
+            f"</div>"
+            f"<p style='font-size:10px; color:#7A9BBF; margin:2px 0 8px 0; line-height:1.4;'>{note}</p>"
+            for item, detail, note in phase['rows']
+        ])
         with col:
             st.markdown(
                 f"<div class='insurance-card' style='min-height:100%;'>"
-                f"<p style='color:#7A9BBF; font-size:10px; letter-spacing:2px; margin:0;'>PATH {path_label}</p>"
-                f"<h3 style='margin:4px 0 4px 0; font-size:16px; color:#C8A84B; font-weight:700;'>{risk}</h3>"
-                f"<p style='color:#E2CC8A; font-size:13px; font-family:\"JetBrains Mono\"; margin:0 0 14px 0;'>{ret}</p>"
+                f"<p style='color:#7A9BBF; font-size:10px; letter-spacing:2px; margin:0;'>{phase['tag']}</p>"
+                f"<h3 style='margin:4px 0 4px 0; font-size:16px; color:#C8A84B; font-weight:700;'>{phase['title']}</h3>"
+                f"<p style='color:#E2CC8A; font-size:13px; font-family:\"JetBrains Mono\"; margin:0 0 8px 0;'>{phase['subtitle']}</p>"
+                f"<p style='color:#7A9BBF; font-size:11px; margin:0 0 14px 0; line-height:1.5; font-style:italic;'>{phase['note']}</p>"
                 f"{body}"
                 f"</div>",
                 unsafe_allow_html=True
             )
 
+    # Transition mechanics note
+    st.markdown("""
+    <div style='background:rgba(200,168,75,0.08); border-left:3px solid #C8A84B; padding:14px 18px; border-radius:8px; margin-top:18px;'>
+    <p style='color:#C8A84B; font-size:11px; letter-spacing:1.5px; margin:0 0 6px 0; font-weight:600;'>TRANSITION MECHANICS (END OF Y1)</p>
+    <p style='color:#EAE3D6; font-size:12px; margin:0; line-height:1.6;'>
+    Trim Mid/Small <strong>50% → 35%</strong> (-15%), exit Tactical Equity <strong>10% → 0%</strong>, drain Liquid <strong>5% → 0%</strong>.
+    Redeploy 30% into: Flexi <strong>+5%</strong>, Large Cap Index <strong>+10%</strong>, Debt <strong>+15%</strong>.
+    Holdings sold after May 2027 qualify for LTCG @ 14.95% — modest tax cost in exchange for downside cushion entering Y2.
+    </p>
+    </div>
+    """, unsafe_allow_html=True)
+
     # ── Footnote ──
     st.markdown("""
     <div style='background:rgba(200,168,75,0.08); border-left:3px solid #C8A84B; padding:14px 18px; border-radius:8px; margin-top:24px;'>
     <p style='color:#C8A84B; font-size:11px; letter-spacing:1.5px; margin:0 0 6px 0; font-weight:600;'>DEPLOYMENT NOTE</p>
-    <p style='color:#EAE3D6; font-size:12px; margin:0; line-height:1.6;'>Lump-sum maturities (₹52L Dec FD) routed via <strong>STP over 12 months</strong>; monthly ₹5L surplus deployed as fresh SIP under chosen path. Existing ₹1L Aggressive (Top 3) SIP continues unchanged.</p>
+    <p style='color:#EAE3D6; font-size:12px; margin:0; line-height:1.6;'>Lump-sum maturities (₹52L Dec FD) routed via <strong>STP over 12 months</strong>; monthly ₹5L surplus deployed as fresh SIP per the Phase 1 weights, transitioning to Phase 2 from Apr 2027. Existing ₹1L Aggressive (Top 3) SIP continues unchanged.</p>
     </div>
     """, unsafe_allow_html=True)
 
