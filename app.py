@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import plotly.graph_objects as go
 from streamlit_gsheets import GSheetsConnection
@@ -9,6 +10,70 @@ st.set_page_config(
     page_icon="◈",
     layout="wide",
     initial_sidebar_state="collapsed"
+)
+
+# ── 1b. PWA BOOTSTRAP ─────────────────────────────────────────────────────────
+# Streamlit doesn't expose <head>, so we inject manifest + SW registration
+# from inside an iframe component using window.parent.
+components.html(
+    """
+    <script>
+    (function () {
+      try {
+        const parentWin = window.parent;
+        const doc = parentWin.document;
+        const head = doc.head;
+        // Streamlit serves /static/* relative to the app base URL.
+        const base = parentWin.location.pathname.replace(/\\/$/, '');
+        const staticUrl = (f) => base + '/app/static/' + f;
+        const ensure = (selector, build) => {
+          if (!doc.querySelector(selector)) head.appendChild(build());
+        };
+        ensure('link[rel="manifest"]', () => {
+          const l = doc.createElement('link');
+          l.rel = 'manifest';
+          l.href = staticUrl('manifest.json');
+          return l;
+        });
+        ensure('meta[name="theme-color"]', () => {
+          const m = doc.createElement('meta');
+          m.name = 'theme-color';
+          m.content = '#050A14';
+          return m;
+        });
+        ensure('meta[name="apple-mobile-web-app-capable"]', () => {
+          const m = doc.createElement('meta');
+          m.name = 'apple-mobile-web-app-capable';
+          m.content = 'yes';
+          return m;
+        });
+        ensure('meta[name="apple-mobile-web-app-status-bar-style"]', () => {
+          const m = doc.createElement('meta');
+          m.name = 'apple-mobile-web-app-status-bar-style';
+          m.content = 'black-translucent';
+          return m;
+        });
+        ensure('meta[name="apple-mobile-web-app-title"]', () => {
+          const m = doc.createElement('meta');
+          m.name = 'apple-mobile-web-app-title';
+          m.content = 'CM Narang';
+          return m;
+        });
+        ensure('link[rel="apple-touch-icon"]', () => {
+          const l = doc.createElement('link');
+          l.rel = 'apple-touch-icon';
+          l.href = staticUrl('icon-192.png');
+          return l;
+        });
+        const nav = parentWin.navigator;
+        if (nav && 'serviceWorker' in nav) {
+          nav.serviceWorker.register(staticUrl('service-worker.js')).catch(() => {});
+        }
+      } catch (e) { /* ignore */ }
+    })();
+    </script>
+    """,
+    height=0,
 )
 
 # ── 2. ROYAL UI STYLING (CSS) ─────────────────────────────────────────────────
@@ -216,21 +281,29 @@ except:
     st.stop()
 
 # ── 6. LOGIN SYSTEM ───────────────────────────────────────────────────────────
+ACCESS_PIN = "2323"
 if "logged_in" not in st.session_state: st.session_state.logged_in = False
 if not st.session_state.logged_in:
     st.write("##")
     st.write("##")
     _, col, _ = st.columns([1, 1.5, 1])
     with col:
-        st.markdown("<div class='login-card'><h2 style='color:#C8A84B; margin-bottom:0;'>◈ PRIVATE WEALTH</h2><p style='color:#7A9BBF; font-size:12px; letter-spacing:2px; margin-bottom:30px;'>CHANDRA MOHAN NARANG</p></div>", unsafe_allow_html=True)
-        u = st.text_input("Username", placeholder="Identity")
-        p = st.text_input("Password", type="password", placeholder="Secret Key")
-        if st.button("AUTHENTICATE & ACCESS"):
-            if u == "cm.narang" and p == "Narang@2026":
+        st.markdown("<div class='login-card'><h2 style='color:#C8A84B; margin-bottom:0;'>◈ PRIVATE WEALTH</h2><p style='color:#7A9BBF; font-size:12px; letter-spacing:2px; margin-bottom:8px;'>CHANDRA MOHAN NARANG</p><p style='color:#7A9BBF; font-size:11px; letter-spacing:1.5px; margin-bottom:30px;'>ENTER 4-DIGIT ACCESS PIN</p></div>", unsafe_allow_html=True)
+        with st.form("pin_form", clear_on_submit=False):
+            pin = st.text_input(
+                "Access PIN",
+                type="password",
+                max_chars=4,
+                placeholder="• • • •",
+                label_visibility="collapsed",
+            )
+            submitted = st.form_submit_button("UNLOCK")
+        if submitted:
+            if pin == ACCESS_PIN:
                 st.session_state.logged_in = True
                 st.rerun()
             else:
-                st.error("Invalid Credentials")
+                st.error("Invalid PIN")
     st.stop()
 
 # ── 7. HEADER ─────────────────────────────────────────────────────────────────
@@ -364,6 +437,82 @@ elif tab == "Plan":
         aif_html += f"<p style='margin:6px 0; font-size:13px; color:#EAE3D6;'><strong style='color:#C8A84B;'>{r['Item']}:</strong> {r['Detail']}{amt} <span style='color:#7A9BBF; font-size:11px;'>{r['Notes']}</span></p>"
     aif_html += "</div>"
     st.markdown(aif_html, unsafe_allow_html=True)
+
+    # ── Wrapper Comparison: AIF vs PMS vs MF vs Hybrid ──
+    st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 4px 0;'>◈ Wrapper Comparison · ₹1 Cr in ICICI Pru Emerging Leaders</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#7A9BBF; font-size:11px; letter-spacing:1px; margin:0 0 12px 0;'>SAME UNDERLYING STRATEGY · 10-YEAR HORIZON · 15% BASE GROSS CAGR · 37% SURCHARGE BRACKET</p>", unsafe_allow_html=True)
+
+    wrapper_rows = [
+        # (label, terminal, cagr, leakage, fee, liquidity, verdict, highlight)
+        ("Direct MF",         "₹3.39 Cr", "12.98%", "₹66 L",  "~0.70%", "T+1 · No lock-in",     "Best — cleanest, cheapest",  True),
+        ("Hybrid 50% PMS + 50% MF", "₹3.26 Cr", "12.55%", "₹78 L",  "~1.50%", "MF daily · PMS daily", "Strong default — alpha + efficiency", False),
+        ("Pure PMS",          "₹3.12 Cr", "12.04%", "₹93 L",  "~2.36%", "Daily NAV · No lock-in", "Concentrated 35-40 stock alpha", False),
+        ("AIF (Cat III)",     "₹2.86 Cr", "11.09%", "₹1.18 Cr", "~2.95%", "Lock-in until M30 · Term 7+2+2 yrs", "Wrapper does not earn its keep", False),
+    ]
+    cmp_html = "<table class='static-table'><thead><tr>"
+    cmp_html += "<th>Wrapper</th><th>Net Wealth Y10</th><th>Post-Tax CAGR</th><th>Total Fees + Tax</th><th>Effective Fee p.a.</th><th>Liquidity</th><th>Verdict</th>"
+    cmp_html += "</tr></thead><tbody>"
+    for label, term, cagr, leak, fee, liq, verdict, hi in wrapper_rows:
+        if hi:
+            row_style = "background:rgba(200,168,75,0.10);"
+            label_html = f"<strong style='color:#E2CC8A;'>{label}</strong> <span style='color:#C8A84B; font-size:10px; letter-spacing:1px;'>· BEST</span>"
+            term_html  = f"<span style='color:#E2CC8A; font-family:\"JetBrains Mono\"; font-weight:700;'>{term}</span>"
+        else:
+            row_style = ""
+            label_html = f"<strong style='color:#EAE3D6;'>{label}</strong>"
+            term_html  = f"<span style='font-family:\"JetBrains Mono\";'>{term}</span>"
+        cmp_html += (
+            f"<tr style='{row_style}'>"
+            f"<td>{label_html}</td>"
+            f"<td>{term_html}</td>"
+            f"<td style='font-family:\"JetBrains Mono\";'>{cagr}</td>"
+            f"<td style='font-family:\"JetBrains Mono\"; color:#7A9BBF;'>{leak}</td>"
+            f"<td style='font-family:\"JetBrains Mono\";'>{fee}</td>"
+            f"<td style='font-size:12px;'>{liq}</td>"
+            f"<td style='font-size:12px; color:#7A9BBF;'>{verdict}</td>"
+            f"</tr>"
+        )
+    cmp_html += "</tbody></table>"
+    st.markdown(cmp_html, unsafe_allow_html=True)
+
+    # Key takeaways
+    pointers = [
+        ("Same strategy, same managers — different wrappers.",
+         "ICICI Pru Emerging Leaders is available as AIF, PMS, and via the AMC's mid/smallcap MFs. The portfolio thesis is identical; only the cost & tax structures differ."),
+        ("The AIF tax advantage is a myth here.",
+         "Surcharge on equity LTCG/STCG is capped at 15% in BOTH the AIF (fund level) and PMS (investor level). For pure long-only equity, AIF carries no tax edge over PMS."),
+        ("MF wins on two compounding levers.",
+         "<strong>Lower fees</strong> (~0.70% TER vs ~2.95% AIF / ~2.36% PMS) and <strong>tax deferral</strong> until exit (vs annual realization in AIF/PMS). Over 10 years this is worth ~₹53 L vs AIF and ~₹27 L vs PMS."),
+        ("AIF still trails even after correcting the drawdown.",
+         "Even with the corrected 8-month deployment (vs 24-month earlier model), AIF lags MF by ₹53 L. Residual gap is structural: extra 0.5% other expenses + no ₹1.25 L LTCG exemption + Y1 partial-deployment drag."),
+        ("Hybrid 50/50 is the strategically rational default.",
+         "₹50L PMS keeps the concentrated 35–40 stock alpha bet; ₹50L Direct MF captures tax deferral and lower fees. Only ₹13 L behind pure MF, with the focused-stock-picking thesis preserved."),
+        ("AIF earns its keep only for non-vanilla strategies.",
+         "Hedged/long-short, derivatives, PIPE deals, private credit, structured strategies — those need the AIF wrapper. For long-only listed mid/smallcap, the wrapper adds cost and lock-in without incremental edge."),
+    ]
+    pt_html = "<div class='insurance-card' style='padding:20px 26px; margin-top:18px;'>"
+    pt_html += "<p style='color:#C8A84B; font-size:11px; letter-spacing:1.5px; margin:0 0 14px 0; font-weight:600;'>KEY POINTERS FOR THE DECISION</p>"
+    for i, (head, body) in enumerate(pointers, 1):
+        pt_html += (
+            f"<div style='display:flex; gap:14px; margin-bottom:14px;'>"
+            f"<span style='color:#C8A84B; font-family:\"JetBrains Mono\"; font-size:13px; font-weight:700; min-width:22px;'>0{i}</span>"
+            f"<div>"
+            f"<p style='color:#E2CC8A; font-size:13px; margin:0 0 4px 0; font-weight:600;'>{head}</p>"
+            f"<p style='color:#EAE3D6; font-size:12px; margin:0; line-height:1.6;'>{body}</p>"
+            f"</div>"
+            f"</div>"
+        )
+    pt_html += "</div>"
+    st.markdown(pt_html, unsafe_allow_html=True)
+
+    # Final recommendation banner
+    st.markdown("""
+    <div style='background:linear-gradient(90deg, rgba(200,168,75,0.18), rgba(200,168,75,0.06)); border-left:3px solid #C8A84B; padding:16px 22px; border-radius:8px; margin-top:14px;'>
+    <p style='color:#C8A84B; font-size:11px; letter-spacing:1.5px; margin:0 0 6px 0; font-weight:600;'>RECOMMENDATION</p>
+    <p style='color:#EAE3D6; font-size:13px; margin:0; line-height:1.7;'>Redirect the ₹1 Cr AIF commitment toward <strong style='color:#E2CC8A;'>Direct MF</strong> (cleanest path) or a <strong style='color:#E2CC8A;'>50/50 PMS + Direct MF Hybrid</strong> (preserves concentrated alpha). AIF wrapper is not justified for long-only mid/smallcap exposure with the same underlying managers.</p>
+    </div>
+    """, unsafe_allow_html=True)
 
     # ── Three Allocation Paths ──
     st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
