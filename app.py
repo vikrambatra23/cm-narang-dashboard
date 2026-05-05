@@ -366,13 +366,12 @@ elif tab == "Portfolio":
 
 elif tab == "Plan":
     plan_df = fetch_plan()
-    cf  = plan_df[plan_df['Section'] == 'Cashflow']
-    aif = plan_df[plan_df['Section'] == 'AIF']
+    cf    = plan_df[plan_df['Section'] == 'Cashflow']
     alloc = plan_df[plan_df['Section'] == 'Allocation']
 
     # ── Hero summary ──
     st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px; margin-bottom:4px;'>Strategic Plan · 5-Year Horizon</p>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#7A9BBF; font-size:12px; letter-spacing:1px; margin-bottom:24px;'>AIF COMMITMENT · CASH FLOW MAP · THREE RISK PATHS</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#7A9BBF; font-size:12px; letter-spacing:1px; margin-bottom:24px;'>CASH FLOW MAP · THREE STRATEGIC PATHS</p>", unsafe_allow_html=True)
 
     # ── Cash Flow ──
     st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ Cash Flow Map (8 Months)</p>", unsafe_allow_html=True)
@@ -384,156 +383,50 @@ elif tab == "Plan":
     cf_html += "</tbody></table>"
     st.markdown(cf_html, unsafe_allow_html=True)
 
-    # ── AIF Funding ──
-    st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ AIF Funding Flow · ₹1 Cr</p>", unsafe_allow_html=True)
-
-    fig_sankey = go.Figure(go.Sankey(
-        arrangement='snap',
-        node=dict(
-            pad=24, thickness=22,
-            line=dict(color='rgba(200,168,75,0.4)', width=0.6),
-            label=[
-                "₹70 L · Existing Cash",
-                "₹24 L · FD (5 Jun)",
-                "₹6 L · Surplus Top-up",
-                "Liquid Fund Kitty · ₹100 L",
-                "AIF · Cat III · ₹1 Cr"
-            ],
-            color=['#52A2FF', '#57C785', '#46C1C1', '#C8A84B', '#E2CC8A'],
-            x=[0.01, 0.01, 0.01, 0.45, 0.99],
-            y=[0.15, 0.50, 0.85, 0.50, 0.50]
-        ),
-        link=dict(
-            source=[0, 1, 2, 3],
-            target=[3, 3, 3, 4],
-            value=[70, 24, 6, 100],
-            color=[
-                'rgba(82,162,255,0.45)',
-                'rgba(87,199,133,0.45)',
-                'rgba(70,193,193,0.45)',
-                'rgba(200,168,75,0.55)'
-            ],
-            label=[
-                'Earns ~6.5–7% in liquid till capital call',
-                'Top-up to kitty',
-                'Top-up to kitty',
-                'Drawn over Jun–Dec 2026 on capital calls'
-            ]
-        )
-    ))
-    fig_sankey.update_layout(
-        height=340,
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(family='Inter, sans-serif', color='#EAE3D6', size=12),
-        margin=dict(t=20, b=20, l=20, r=20)
-    )
-    st.plotly_chart(fig_sankey, use_container_width=True)
-
-    aif_html = "<div class='insurance-card' style='padding:18px 24px; margin-top:8px;'><span class='insurance-icon'>✦</span>"
-    for _, r in aif.iterrows():
-        amt = f" — <span style='font-family:\"JetBrains Mono\"; color:#E2CC8A;'>₹{r['Amount (Rs L)']} L</span>" if str(r['Amount (Rs L)']).strip() not in ['','nan'] else ""
-        aif_html += f"<p style='margin:6px 0; font-size:13px; color:#EAE3D6;'><strong style='color:#C8A84B;'>{r['Item']}:</strong> {r['Detail']}{amt} <span style='color:#7A9BBF; font-size:11px;'>{r['Notes']}</span></p>"
-    aif_html += "</div>"
-    st.markdown(aif_html, unsafe_allow_html=True)
-
-    # ── Wrapper Comparison: AIF vs PMS vs MF vs Hybrid ──
-    st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 4px 0;'>◈ Wrapper Comparison · ₹1 Cr in ICICI Pru Emerging Leaders</p>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#7A9BBF; font-size:11px; letter-spacing:1px; margin:0 0 12px 0;'>SAME UNDERLYING STRATEGY · 10-YEAR HORIZON · 15% BASE GROSS CAGR · 37% SURCHARGE BRACKET</p>", unsafe_allow_html=True)
-
-    wrapper_rows = [
-        # (label, terminal, cagr, leakage, fee, liquidity, verdict, highlight)
-        ("Direct MF",         "₹3.39 Cr", "12.98%", "₹66 L",  "~0.70%", "T+1 · No lock-in",     "Best — cleanest, cheapest",  True),
-        ("Hybrid 50% PMS + 50% MF", "₹3.26 Cr", "12.55%", "₹78 L",  "~1.50%", "MF daily · PMS daily", "Strong default — alpha + efficiency", False),
-        ("Pure PMS",          "₹3.12 Cr", "12.04%", "₹93 L",  "~2.36%", "Daily NAV · No lock-in", "Concentrated 35-40 stock alpha", False),
-        ("AIF (Cat III)",     "₹2.86 Cr", "11.09%", "₹1.18 Cr", "~2.95%", "Lock-in until M30 · Term 7+2+2 yrs", "Wrapper does not earn its keep", False),
-    ]
-    cmp_html = "<table class='static-table'><thead><tr>"
-    cmp_html += "<th>Wrapper</th><th>Net Wealth Y10</th><th>Post-Tax CAGR</th><th>Total Fees + Tax</th><th>Effective Fee p.a.</th><th>Liquidity</th><th>Verdict</th>"
-    cmp_html += "</tr></thead><tbody>"
-    for label, term, cagr, leak, fee, liq, verdict, hi in wrapper_rows:
-        if hi:
-            row_style = "background:rgba(200,168,75,0.10);"
-            label_html = f"<strong style='color:#E2CC8A;'>{label}</strong> <span style='color:#C8A84B; font-size:10px; letter-spacing:1px;'>· BEST</span>"
-            term_html  = f"<span style='color:#E2CC8A; font-family:\"JetBrains Mono\"; font-weight:700;'>{term}</span>"
-        else:
-            row_style = ""
-            label_html = f"<strong style='color:#EAE3D6;'>{label}</strong>"
-            term_html  = f"<span style='font-family:\"JetBrains Mono\";'>{term}</span>"
-        cmp_html += (
-            f"<tr style='{row_style}'>"
-            f"<td>{label_html}</td>"
-            f"<td>{term_html}</td>"
-            f"<td style='font-family:\"JetBrains Mono\";'>{cagr}</td>"
-            f"<td style='font-family:\"JetBrains Mono\"; color:#7A9BBF;'>{leak}</td>"
-            f"<td style='font-family:\"JetBrains Mono\";'>{fee}</td>"
-            f"<td style='font-size:12px;'>{liq}</td>"
-            f"<td style='font-size:12px; color:#7A9BBF;'>{verdict}</td>"
-            f"</tr>"
-        )
-    cmp_html += "</tbody></table>"
-    st.markdown(cmp_html, unsafe_allow_html=True)
-
-    # Key takeaways
-    pointers = [
-        ("Same strategy, same managers — different wrappers.",
-         "ICICI Pru Emerging Leaders is available as AIF, PMS, and via the AMC's mid/smallcap MFs. The portfolio thesis is identical; only the cost & tax structures differ."),
-        ("The AIF tax advantage is a myth here.",
-         "Surcharge on equity LTCG/STCG is capped at 15% in BOTH the AIF (fund level) and PMS (investor level). For pure long-only equity, AIF carries no tax edge over PMS."),
-        ("MF wins on two compounding levers.",
-         "<strong>Lower fees</strong> (~0.70% TER vs ~2.95% AIF / ~2.36% PMS) and <strong>tax deferral</strong> until exit (vs annual realization in AIF/PMS). Over 10 years this is worth ~₹53 L vs AIF and ~₹27 L vs PMS."),
-        ("AIF still trails even after correcting the drawdown.",
-         "Even with the corrected 8-month deployment (vs 24-month earlier model), AIF lags MF by ₹53 L. Residual gap is structural: extra 0.5% other expenses + no ₹1.25 L LTCG exemption + Y1 partial-deployment drag."),
-        ("Hybrid 50/50 is the strategically rational default.",
-         "₹50L PMS keeps the concentrated 35–40 stock alpha bet; ₹50L Direct MF captures tax deferral and lower fees. Only ₹13 L behind pure MF, with the focused-stock-picking thesis preserved."),
-        ("AIF earns its keep only for non-vanilla strategies.",
-         "Hedged/long-short, derivatives, PIPE deals, private credit, structured strategies — those need the AIF wrapper. For long-only listed mid/smallcap, the wrapper adds cost and lock-in without incremental edge."),
-    ]
-    pt_html = "<div class='insurance-card' style='padding:20px 26px; margin-top:18px;'>"
-    pt_html += "<p style='color:#C8A84B; font-size:11px; letter-spacing:1.5px; margin:0 0 14px 0; font-weight:600;'>KEY POINTERS FOR THE DECISION</p>"
-    for i, (head, body) in enumerate(pointers, 1):
-        pt_html += (
-            f"<div style='display:flex; gap:14px; margin-bottom:14px;'>"
-            f"<span style='color:#C8A84B; font-family:\"JetBrains Mono\"; font-size:13px; font-weight:700; min-width:22px;'>0{i}</span>"
-            f"<div>"
-            f"<p style='color:#E2CC8A; font-size:13px; margin:0 0 4px 0; font-weight:600;'>{head}</p>"
-            f"<p style='color:#EAE3D6; font-size:12px; margin:0; line-height:1.6;'>{body}</p>"
-            f"</div>"
-            f"</div>"
-        )
-    pt_html += "</div>"
-    st.markdown(pt_html, unsafe_allow_html=True)
-
-    # Final recommendation banner
-    st.markdown("""
-    <div style='background:linear-gradient(90deg, rgba(200,168,75,0.18), rgba(200,168,75,0.06)); border-left:3px solid #C8A84B; padding:16px 22px; border-radius:8px; margin-top:14px;'>
-    <p style='color:#C8A84B; font-size:11px; letter-spacing:1.5px; margin:0 0 6px 0; font-weight:600;'>RECOMMENDATION</p>
-    <p style='color:#EAE3D6; font-size:13px; margin:0; line-height:1.7;'>Redirect the ₹1 Cr AIF commitment toward <strong style='color:#E2CC8A;'>Direct MF</strong> (cleanest path) or a <strong style='color:#E2CC8A;'>50/50 PMS + Direct MF Hybrid</strong> (preserves concentrated alpha). AIF wrapper is not justified for long-only mid/smallcap exposure with the same underlying managers.</p>
-    </div>
-    """, unsafe_allow_html=True)
-
     # ── Three Allocation Paths ──
     st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ Three Strategic Paths · Non-AIF Capital</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ Three Strategic Paths</p>", unsafe_allow_html=True)
+
+    # Path A is overridden in code: Aggressive Diversified mix (45/30/10/15)
+    PATH_A_OVERRIDE = {
+        'risk': 'Aggressive Diversified',
+        'ret':  '11–12% pre-tax',
+        'rows': [
+            ('Mid + Small Cap MF',  '45%', 'Direct plans · Bandhan, Nippon, HDFC small + Edelweiss/Kotak mid · ~14% pre-tax'),
+            ('Flexi Cap MF',        '30%', 'Cross-cycle anchor · Parag Parikh, HDFC, ICICI Pru · ~12% pre-tax'),
+            ('International',       '10%', 'US/Global feeder funds for geographic diversification · ~12% pre-tax'),
+            ('Debt (Arbitrage)',    '15%', 'Equity-tax treatment, low-correlation cushion · ~7% pre-tax'),
+        ]
+    }
 
     cols = st.columns(3)
     for col, path_label in zip(cols, ['A','B','C']):
-        path_rows = alloc[alloc['Path'] == path_label]
-        risk = path_rows[path_rows['Item'] == 'Risk Level']['Detail'].values
-        ret  = path_rows[path_rows['Item'] == 'Expected Return']['Detail'].values
-        risk = risk[0] if len(risk) else ''
-        ret  = ret[0]  if len(ret)  else ''
-        body = "".join([
-            f"<div style='display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #1C3050;'>"
-            f"<span style='font-size:12px; color:#EAE3D6;'>{r['Item']}</span>"
-            f"<span style='font-size:12px; color:#C8A84B; font-family:\"JetBrains Mono\"; font-weight:600;'>{r['Detail']}</span>"
-            f"</div>"
-            f"<p style='font-size:10px; color:#7A9BBF; margin:2px 0 8px 0; line-height:1.4;'>{r['Notes']}</p>"
-            for _, r in path_rows.iterrows()
-            if r['Item'] not in ('Risk Level','Expected Return','5-yr deploy')
-        ])
+        if path_label == 'A':
+            risk = PATH_A_OVERRIDE['risk']
+            ret  = PATH_A_OVERRIDE['ret']
+            body = "".join([
+                f"<div style='display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #1C3050;'>"
+                f"<span style='font-size:12px; color:#EAE3D6;'>{item}</span>"
+                f"<span style='font-size:12px; color:#C8A84B; font-family:\"JetBrains Mono\"; font-weight:600;'>{detail}</span>"
+                f"</div>"
+                f"<p style='font-size:10px; color:#7A9BBF; margin:2px 0 8px 0; line-height:1.4;'>{note}</p>"
+                for item, detail, note in PATH_A_OVERRIDE['rows']
+            ])
+        else:
+            path_rows = alloc[alloc['Path'] == path_label]
+            risk = path_rows[path_rows['Item'] == 'Risk Level']['Detail'].values
+            ret  = path_rows[path_rows['Item'] == 'Expected Return']['Detail'].values
+            risk = risk[0] if len(risk) else ''
+            ret  = ret[0]  if len(ret)  else ''
+            body = "".join([
+                f"<div style='display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #1C3050;'>"
+                f"<span style='font-size:12px; color:#EAE3D6;'>{r['Item']}</span>"
+                f"<span style='font-size:12px; color:#C8A84B; font-family:\"JetBrains Mono\"; font-weight:600;'>{r['Detail']}</span>"
+                f"</div>"
+                f"<p style='font-size:10px; color:#7A9BBF; margin:2px 0 8px 0; line-height:1.4;'>{r['Notes']}</p>"
+                for _, r in path_rows.iterrows()
+                if r['Item'] not in ('Risk Level','Expected Return','5-yr deploy')
+            ])
         with col:
             st.markdown(
                 f"<div class='insurance-card' style='min-height:100%;'>"
