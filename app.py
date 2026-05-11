@@ -279,7 +279,7 @@ SIPS_PLANNED = [
 DEPLOYMENT_PLAN = {
     "source":         "LIQUIDBEES (₹35.0 L)",
     "target":         "4 Direct MFs on Zerodha Coin",
-    "start_target":   "Jan 2027",
+    "start_target":   "Jun 2026",
     "duration_mo":    8,
     "deployed_l":     0.0,   # update as STP tranches execute
     "total_l":        35.0,
@@ -424,7 +424,7 @@ elif tab == "New":
     ret_total = (pnl_total / inv_total * 100) if inv_total else 0
 
     st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px; margin-bottom:4px;'>New Investments · Live Tracking</p>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#7A9BBF; font-size:11px; letter-spacing:1.5px; margin-bottom:18px;'>POST 2026-05-11 · LUMP SUMS VIA ICICI DIRECT · MIGRATING SIPs TO ZERODHA COIN (DIRECT) FROM JAN 2027</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#7A9BBF; font-size:11px; letter-spacing:1.5px; margin-bottom:18px;'>POST 2026-05-11 · LUMP SUMS VIA ICICI DIRECT · ZERODHA COIN (DIRECT) ONBOARDING JUN 2026</p>", unsafe_allow_html=True)
 
     # KPI Row
     k1, k2, k3, k4 = st.columns(4)
@@ -524,7 +524,7 @@ elif tab == "New":
             "<div class='insurance-card' style='text-align:center; padding:32px;'>"
             "<p style='color:#7A9BBF; font-size:11px; letter-spacing:2px; margin:0;'>NO ACTIVE SIPs YET</p>"
             "<p style='color:#EAE3D6; font-size:13px; margin:14px 0 6px 0; line-height:1.65;'>"
-            "Coin onboarding scheduled <strong style='color:#C8A84B;'>Jan 2027</strong>. Direct-plan SIPs in "
+            "Coin account opens in the next <strong style='color:#C8A84B;'>1-2 weeks</strong>; first STP/SIP tranches scheduled <strong style='color:#C8A84B;'>Jun 2026</strong>. Direct-plan SIPs in "
             "<strong>Motilal Midcap</strong>, <strong>HDFC Mid-Cap Opp</strong>, <strong>Nippon Small Cap</strong>, and "
             "<strong>Bandhan Small Cap</strong> will populate here once the first auto-debit clears."
             "</p>"
@@ -542,7 +542,7 @@ elif tab == "New":
     <p style='color:#EAE3D6; font-size:12px; margin:0; line-height:1.65;'>
     This view tracks <strong>only new investments made from 2026-05-11 onwards</strong>. Legacy holdings —
     existing Regular-plan MFs, older direct equity, FDs, gold — continue to live in the <strong style='color:#C8A84B;'>Portfolio</strong> tab from the master Google Sheet.
-    Fresh SIPs on Coin from <strong>Jan 2027</strong> will be appended below.
+    Fresh SIPs on Coin from <strong>Jun 2026</strong> will be appended below.
     </p>
     </div>
     """, unsafe_allow_html=True)
