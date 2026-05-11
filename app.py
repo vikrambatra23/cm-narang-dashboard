@@ -3,6 +3,7 @@ import streamlit.components.v1 as components
 import pandas as pd
 import plotly.graph_objects as go
 from streamlit_gsheets import GSheetsConnection
+from datetime import date, datetime
 
 # ── 1. PAGE CONFIGURATION ─────────────────────────────────────────────────────
 st.set_page_config(
@@ -256,6 +257,34 @@ def fetch_plan():
     df = conn.read(spreadsheet=PLAN_URL).dropna(how='all')
     return df.fillna('').astype(str).replace({'nan': '', 'NaN': ''})
 
+# ── 4b. NEW INVESTMENTS LEDGER (post-2026-05-11, ICICI Direct lump sums) ──────
+# Hardcoded for now; future SIPs on Zerodha Coin appended to SIPS_PLANNED.
+# Update `ltp` periodically (or hook to a price feed) to refresh returns.
+NEW_LUMPSUM = [
+    # symbol,        name,                            kind,     qty,    buy,     ltp,     date,         platform,        theme
+    ("AVANTIFEED",   "Avanti Feeds",                  "Equity", 72,     1417.00, 1417.90, "2026-05-11", "ICICI Direct",  "Animal protein · defensive"),
+    ("SOUTHBANK",    "South Indian Bank",             "Equity", 2400,   40.67,   40.65,   "2026-05-11", "ICICI Direct",  "PSU/private bank rerating"),
+    ("COALINDIA",    "Coal India",                    "Equity", 217,    460.75,  460.70,  "2026-05-11", "ICICI Direct",  "Energy · high dividend"),
+    ("MOTHERSON",    "Samvardhana Motherson",         "Equity", 760,    131.02,  130.87,  "2026-05-11", "ICICI Direct",  "Auto ancillary"),
+    ("SHILPAMED",    "Shilpa Medicare",               "Equity", 222,    449.40,  447.85,  "2026-05-11", "ICICI Direct",  "Pharma · midcap"),
+    ("LIQUIDBEES",   "Nippon India Liquid BeES",      "Liquid", 3500,   999.99,  999.99,  "2026-05-11", "ICICI Direct",  "Dry powder · staged for MF deployment via Coin"),
+]
+
+# SIPs / Direct MF holdings on Zerodha Coin — populate from Jan 2027 onwards
+SIPS_PLANNED = [
+    # ("MOTILAL_MIDCAP", "Motilal Oswal Midcap Direct G", "MF",  25000, "Monthly",  "2027-01-05", "Zerodha Coin", "18% of catch-up bucket"),
+]
+
+# Liquid-to-MF deployment plan (the ₹35L LIQUIDBEES → 4 funds via Coin)
+DEPLOYMENT_PLAN = {
+    "source":         "LIQUIDBEES (₹35.0 L)",
+    "target":         "4 Direct MFs on Zerodha Coin",
+    "start_target":   "Jan 2027",
+    "duration_mo":    8,
+    "deployed_l":     0.0,   # update as STP tranches execute
+    "total_l":        35.0,
+}
+
 # ── 5. CALCULATIONS (UPDATED FOR INDIVIDUAL STOCKS) ───────────────────────────
 try:
     assets_df = fetch_data()
@@ -314,7 +343,7 @@ with col_h2:
     st.markdown(f"<div style='text-align: right; padding-top: 18px;'><p style='color: #5C7089; font-size: 10px; letter-spacing: 2px; margin-bottom: 2px;'>VALUATION DATE</p><p style='color: #EAE3D6; font-size: 14px; font-weight: 500; font-family: \"JetBrains Mono\", monospace;'>{pd.Timestamp.now().strftime('%d %B, %Y')}</p></div>", unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 12px 0 18px 0; border: 0; border-top: 1px solid #1C3050;'>", unsafe_allow_html=True)
-tab = st.radio("nav", ["Overview", "Portfolio", "Plan", "Protection", "Actions"], horizontal=True, label_visibility="collapsed")
+tab = st.radio("nav", ["Overview", "Portfolio", "New", "Plan", "Protection", "Actions"], horizontal=True, label_visibility="collapsed")
 
 # ── 8. TABS ───────────────────────────────────────────────────────────────────
 if tab == "Overview":
@@ -355,14 +384,168 @@ if tab == "Overview":
                 st.markdown(f"<div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid #1C3050; padding-bottom:6px;'><span>{label}{badge}</span><span style='font-family:\"JetBrains Mono\";'>{fmt_l(val)}</span></div>", unsafe_allow_html=True)
 
 elif tab == "Portfolio":
-    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px;'>Detailed Holding Inventory</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px; margin-bottom:4px;'>Detailed Holding Inventory</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#7A9BBF; font-size:11px; letter-spacing:1.5px; margin-bottom:18px;'>LEGACY BOOK · ICICI DIRECT (REGULAR PLANS) + EXISTING DIRECT EQUITY · POST-MAY-2026 PURCHASES TRACKED IN <strong style='color:#C8A84B;'>NEW</strong> TAB</p>", unsafe_allow_html=True)
     disp = assets_df[['Asset Name', 'Category', 'Units / Qty', 'Current Value', 'Val_Num']].copy()
-    disp = disp.sort_values(by='Val_Num', ascending=False) 
+    disp = disp.sort_values(by='Val_Num', ascending=False)
     disp['Alloc %'] = (disp['Val_Num'] / total_nw * 100).round(1).astype(str) + '%'
     html = "<table class='static-table'><thead><tr><th>Asset Name</th><th>Category</th><th>Qty</th><th>Value</th><th>Alloc %</th></tr></thead><tbody>"
     for _, r in disp.iterrows():
         html += f"<tr><td>{r['Asset Name']}</td><td>{r['Category']}</td><td>{r['Units / Qty']}</td><td>{fmt_l(r['Val_Num'])}</td><td>{r['Alloc %']}</td></tr>"
     st.markdown(html + "</tbody></table>", unsafe_allow_html=True)
+
+elif tab == "New":
+    today = pd.Timestamp.now().date()
+
+    # Build per-holding metrics
+    rows = []
+    for sym, name, kind, qty, buy, ltp, dt, plat, theme in NEW_LUMPSUM:
+        d = datetime.strptime(dt, "%Y-%m-%d").date()
+        invested = qty * buy
+        current  = qty * ltp
+        pnl      = current - invested
+        ret_pct  = (pnl / invested * 100) if invested else 0
+        rows.append(dict(symbol=sym, name=name, kind=kind, qty=qty, buy=buy, ltp=ltp,
+                         date=d, days=(today - d).days, invested=invested, current=current,
+                         pnl=pnl, ret=ret_pct, platform=plat, theme=theme))
+
+    eq  = [r for r in rows if r['kind'] == 'Equity']
+    liq = [r for r in rows if r['kind'] == 'Liquid']
+
+    inv_eq  = sum(r['invested'] for r in eq)
+    cur_eq  = sum(r['current']  for r in eq)
+    pnl_eq  = cur_eq - inv_eq
+    ret_eq  = (pnl_eq / inv_eq * 100) if inv_eq else 0
+    inv_liq = sum(r['invested'] for r in liq)
+    cur_liq = sum(r['current']  for r in liq)
+    inv_total = inv_eq + inv_liq
+    cur_total = cur_eq + cur_liq
+    pnl_total = cur_total - inv_total
+    ret_total = (pnl_total / inv_total * 100) if inv_total else 0
+
+    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px; margin-bottom:4px;'>New Investments · Live Tracking</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#7A9BBF; font-size:11px; letter-spacing:1.5px; margin-bottom:18px;'>POST 2026-05-11 · LUMP SUMS VIA ICICI DIRECT · MIGRATING SIPs TO ZERODHA COIN (DIRECT) FROM JAN 2027</p>", unsafe_allow_html=True)
+
+    # KPI Row
+    k1, k2, k3, k4 = st.columns(4)
+    pnl_color = "#57C785" if pnl_total >= 0 else "#FF6B6B"
+    sig = "+" if pnl_total >= 0 else ""
+    with k1:
+        st.markdown(f"<div class='kpi-tile'><span class='kpi-icon'>◈</span><p class='kpi-label'>New Deployed</p><p class='kpi-value'>{fmt_l(inv_total)}</p></div>", unsafe_allow_html=True)
+    with k2:
+        st.markdown(f"<div class='kpi-tile'><span class='kpi-icon'>▲</span><p class='kpi-label'>Direct Equity</p><p class='kpi-value'>{fmt_l(inv_eq)}</p></div>", unsafe_allow_html=True)
+    with k3:
+        st.markdown(f"<div class='kpi-tile'><span class='kpi-icon'>✦</span><p class='kpi-label'>Liquid · Dry Powder</p><p class='kpi-value'>{fmt_l(inv_liq)}</p></div>", unsafe_allow_html=True)
+    with k4:
+        st.markdown(f"<div class='kpi-tile'><span class='kpi-icon'>±</span><p class='kpi-label'>Net P&amp;L</p><p class='kpi-value' style='color:{pnl_color};'>{sig}{ret_total:.2f}%</p></div>", unsafe_allow_html=True)
+
+    # Direct Equity table
+    st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ Direct Equity · ICICI Direct</p>", unsafe_allow_html=True)
+    eq_html = "<table class='static-table'><thead><tr><th>Symbol</th><th>Theme</th><th>Qty</th><th>Buy ₹</th><th>LTP ₹</th><th>Invested</th><th>Current</th><th>Return</th><th>Held</th></tr></thead><tbody>"
+    for r in eq:
+        rc = "#57C785" if r['ret'] >= 0 else "#FF6B6B"
+        rs = "+" if r['ret'] >= 0 else ""
+        eq_html += (
+            f"<tr><td><strong>{r['symbol']}</strong><br><span style='color:#7A9BBF; font-size:10px;'>{r['name']}</span></td>"
+            f"<td style='color:#7A9BBF; font-size:11px;'>{r['theme']}</td>"
+            f"<td>{r['qty']}</td>"
+            f"<td style='font-family:\"JetBrains Mono\";'>{r['buy']:.2f}</td>"
+            f"<td style='font-family:\"JetBrains Mono\";'>{r['ltp']:.2f}</td>"
+            f"<td>{fmt_l(r['invested'])}</td>"
+            f"<td>{fmt_l(r['current'])}</td>"
+            f"<td style='color:{rc}; font-family:\"JetBrains Mono\"; font-weight:600;'>{rs}{r['ret']:.2f}%</td>"
+            f"<td style='font-family:\"JetBrains Mono\";'>{r['days']}d</td></tr>"
+        )
+    sub_c = "#57C785" if ret_eq >= 0 else "#FF6B6B"
+    sub_s = "+" if ret_eq >= 0 else ""
+    eq_html += (
+        f"<tr style='font-weight:700; color:#E2CC8A;'>"
+        f"<td colspan='5' style='border-top:2px solid #C8A84B;'>SUBTOTAL · {len(eq)} HOLDINGS</td>"
+        f"<td style='border-top:2px solid #C8A84B;'>{fmt_l(inv_eq)}</td>"
+        f"<td style='border-top:2px solid #C8A84B;'>{fmt_l(cur_eq)}</td>"
+        f"<td style='color:{sub_c}; border-top:2px solid #C8A84B;'>{sub_s}{ret_eq:.2f}%</td>"
+        f"<td style='border-top:2px solid #C8A84B;'>—</td></tr>"
+    )
+    eq_html += "</tbody></table>"
+    st.markdown(eq_html, unsafe_allow_html=True)
+
+    # Liquid / Dry Powder
+    st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ Liquid · Dry Powder Staged for MF Deployment</p>", unsafe_allow_html=True)
+
+    lr        = liq[0]
+    deployed  = DEPLOYMENT_PLAN['deployed_l']
+    pool_l    = DEPLOYMENT_PLAN['total_l']
+    pct       = (deployed / pool_l * 100) if pool_l else 0
+    remaining = pool_l - deployed
+
+    st.markdown(
+        f"<div class='insurance-card'>"
+        f"<div style='display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px;'>"
+        f"<div>"
+        f"<p style='color:#7A9BBF; font-size:10px; letter-spacing:1.5px; margin:0 0 4px 0;'>HOLDING</p>"
+        f"<h3 style='color:#C8A84B; font-size:18px; font-weight:700; margin:0;'>{lr['symbol']}</h3>"
+        f"<p style='color:#EAE3D6; font-size:12px; margin:2px 0 0 0;'>{lr['name']}</p>"
+        f"<p style='color:#7A9BBF; font-size:11px; margin:6px 0 0 0;'>{lr['qty']} units · bought {lr['date']} · {lr['days']}d held</p>"
+        f"</div>"
+        f"<div style='text-align:right;'>"
+        f"<p style='color:#7A9BBF; font-size:10px; letter-spacing:1.5px; margin:0;'>VALUE</p>"
+        f"<p style='font-family:\"JetBrains Mono\"; color:#E2CC8A; font-size:24px; font-weight:600; margin:2px 0;'>{fmt_l(lr['current'])}</p>"
+        f"<p style='color:#57C785; font-size:11px; margin:0;'>~6-7% p.a. daily distribution</p>"
+        f"</div>"
+        f"</div>"
+        f"<p style='color:#7A9BBF; font-size:11px; line-height:1.5; margin:8px 0 18px 0; font-style:italic;'>"
+        f"LIQUIDBEES NAV is fixed at ₹1,000; returns accrue as <strong style='color:#EAE3D6;'>daily distribution of fractional units</strong>, not price appreciation. Refresh unit count periodically to capture growth."
+        f"</p>"
+        f"<div style='border-top:1px solid #1C3050; padding-top:14px;'>"
+        f"<div style='display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;'>"
+        f"<p style='color:#C8A84B; font-size:11px; letter-spacing:1.5px; margin:0; font-weight:600;'>DEPLOYMENT PROGRESS → 4 DIRECT MFs ON COIN</p>"
+        f"<p style='font-family:\"JetBrains Mono\"; color:#E2CC8A; font-size:14px; margin:0; font-weight:600;'>{pct:.0f}%</p>"
+        f"</div>"
+        f"<div style='background:#0A1528; height:12px; border-radius:6px; overflow:hidden; border:1px solid #1C3050;'>"
+        f"<div style='height:100%; width:{pct}%; background:linear-gradient(90deg, #C8A84B, #E2CC8A); box-shadow: 0 0 12px rgba(200,168,75,0.4);'></div>"
+        f"</div>"
+        f"<div style='display:flex; justify-content:space-between; margin-top:10px; gap:12px;'>"
+        f"<p style='color:#7A9BBF; font-size:10px; margin:0;'>Deployed: <strong style='color:#57C785;'>₹{deployed:.1f}L</strong></p>"
+        f"<p style='color:#7A9BBF; font-size:10px; margin:0;'>Remaining: <strong style='color:#E2CC8A;'>₹{remaining:.1f}L</strong></p>"
+        f"<p style='color:#7A9BBF; font-size:10px; margin:0; text-align:right;'>Start: <strong style='color:#EAE3D6;'>{DEPLOYMENT_PLAN['start_target']}</strong> · {DEPLOYMENT_PLAN['duration_mo']}-mo STP</p>"
+        f"</div>"
+        f"</div>"
+        f"</div>",
+        unsafe_allow_html=True
+    )
+
+    # SIPs section (placeholder until Jan 2027)
+    st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ SIPs · Zerodha Coin (Direct Plans)</p>", unsafe_allow_html=True)
+    if not SIPS_PLANNED:
+        st.markdown(
+            "<div class='insurance-card' style='text-align:center; padding:32px;'>"
+            "<p style='color:#7A9BBF; font-size:11px; letter-spacing:2px; margin:0;'>NO ACTIVE SIPs YET</p>"
+            "<p style='color:#EAE3D6; font-size:13px; margin:14px 0 6px 0; line-height:1.65;'>"
+            "Coin onboarding scheduled <strong style='color:#C8A84B;'>Jan 2027</strong>. Direct-plan SIPs in "
+            "<strong>Motilal Midcap</strong>, <strong>HDFC Mid-Cap Opp</strong>, <strong>Nippon Small Cap</strong>, and "
+            "<strong>Bandhan Small Cap</strong> will populate here once the first auto-debit clears."
+            "</p>"
+            "<p style='color:#7A9BBF; font-size:10px; font-style:italic; margin:16px 0 0 0; line-height:1.5;'>"
+            "Each SIP will track: installments completed · weighted-avg buy NAV · time-weighted return · days since first installment"
+            "</p>"
+            "</div>",
+            unsafe_allow_html=True
+        )
+
+    # Segregation footer
+    st.markdown("""
+    <div style='background:rgba(200,168,75,0.08); border-left:3px solid #C8A84B; padding:14px 18px; border-radius:8px; margin-top:24px;'>
+    <p style='color:#C8A84B; font-size:11px; letter-spacing:1.5px; margin:0 0 6px 0; font-weight:600;'>SEGREGATION</p>
+    <p style='color:#EAE3D6; font-size:12px; margin:0; line-height:1.65;'>
+    This view tracks <strong>only new investments made from 2026-05-11 onwards</strong>. Legacy holdings —
+    existing Regular-plan MFs, older direct equity, FDs, gold — continue to live in the <strong style='color:#C8A84B;'>Portfolio</strong> tab from the master Google Sheet.
+    Fresh SIPs on Coin from <strong>Jan 2027</strong> will be appended below.
+    </p>
+    </div>
+    """, unsafe_allow_html=True)
 
 elif tab == "Plan":
     plan_df = fetch_plan()
