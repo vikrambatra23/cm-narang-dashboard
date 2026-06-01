@@ -242,24 +242,43 @@ def fmt_l(n):  return f"₹{n/1e5:.1f} L"
 # ── 4. LIVE GOOGLE SHEETS CONNECTION ──────────────────────────────────────────
 URL = "https://docs.google.com/spreadsheets/d/1PZACfddE3VkcCWqYD-_0j_ERaBUT1SBQqPN63Vylvy0/export?format=csv"
 PLAN_URL = "https://docs.google.com/spreadsheets/d/1PZACfddE3VkcCWqYD-_0j_ERaBUT1SBQqPN63Vylvy0/export?format=csv&gid=1751726483"
+LIVE_RATES_URL = "https://docs.google.com/spreadsheets/d/1PZACfddE3VkcCWqYD-_0j_ERaBUT1SBQqPN63Vylvy0/export?format=csv&gid=1691255921"
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-@st.cache_data(ttl=86400)
+PRICE_TTL = 900    # 15 min — live market prices (GOOGLEFINANCE-backed)
+PLAN_TTL  = 3600   # 1 hour — planning data changes rarely
+
+@st.cache_data(ttl=PRICE_TTL)
 def fetch_data():
-    df = conn.read(spreadsheet=URL)
+    df = conn.read(spreadsheet=URL, ttl=PRICE_TTL)
     if 'Current Value' in df.columns:
         df['Val_Num'] = pd.to_numeric(df['Current Value'].astype(str).replace('[₹,L,Cr, ,]', '', regex=True), errors='coerce').fillna(0)
     assets = df[~df['Asset Name'].str.contains('Total|TOTAL|Sum|Subtotal', na=False)]
     return assets.dropna(subset=['Asset Name'])
 
-@st.cache_data(ttl=86400)
+@st.cache_data(ttl=PLAN_TTL)
 def fetch_plan():
-    df = conn.read(spreadsheet=PLAN_URL).dropna(how='all')
+    df = conn.read(spreadsheet=PLAN_URL, ttl=PLAN_TTL).dropna(how='all')
     return df.fillna('').astype(str).replace({'nan': '', 'NaN': ''})
 
+@st.cache_data(ttl=PRICE_TTL)
+def fetch_live_rates():
+    """Live GOOGLEFINANCE prices from the 'Live Rates' tab, keyed by ticker/symbol (col A → col B)."""
+    df = conn.read(spreadsheet=LIVE_RATES_URL, ttl=PRICE_TTL)
+    prices = {}
+    for _, r in df.iterrows():
+        key = str(r.iloc[0]).strip().upper()
+        try:
+            prices[key] = float(r.iloc[1])
+        except (ValueError, TypeError, IndexError):
+            continue
+    return prices
+
 # ── 4b. NEW INVESTMENTS LEDGER (post-2026-05-11, ICICI Direct lump sums) ──────
-# Hardcoded for now; future SIPs on Zerodha Coin appended to SIPS_PLANNED.
-# Update `ltp` periodically (or hook to a price feed) to refresh returns.
+# `ltp` here is only a FALLBACK — live prices are pulled per-render from the
+# 'Live Rates' tab (GOOGLEFINANCE) and matched on the symbol. Symbols not in
+# that tab (e.g. LIQUIDBEES, fixed NAV) keep the ltp below.
+# Future SIPs on Zerodha Coin appended to SIPS_PLANNED.
 NEW_LUMPSUM = [
     # symbol,        name,                            kind,     qty,    buy,     ltp,     date,         platform,        theme
     ("AVANTIFEED",   "Avanti Feeds",                  "Equity", 72,     1417.00, 1417.90, "2026-05-11", "ICICI Direct",  "Animal protein · defensive"),
@@ -397,9 +416,14 @@ elif tab == "Portfolio":
 elif tab == "New":
     today = pd.Timestamp.now().date()
 
+    # Live prices for the new equities (GOOGLEFINANCE via the 'Live Rates' tab).
+    # Falls back to the hardcoded ltp for any symbol not in the sheet (e.g. LIQUIDBEES).
+    live_prices = fetch_live_rates()
+
     # Build per-holding metrics
     rows = []
     for sym, name, kind, qty, buy, ltp, dt, plat, theme in NEW_LUMPSUM:
+        ltp = live_prices.get(sym.upper(), ltp)
         d = datetime.strptime(dt, "%Y-%m-%d").date()
         invested = qty * buy
         current  = qty * ltp
