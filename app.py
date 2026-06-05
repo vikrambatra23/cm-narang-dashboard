@@ -1,7 +1,9 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import plotly.graph_objects as go
 from streamlit_gsheets import GSheetsConnection
+from datetime import date, datetime
 
 # ── 1. PAGE CONFIGURATION ─────────────────────────────────────────────────────
 st.set_page_config(
@@ -9,6 +11,70 @@ st.set_page_config(
     page_icon="◈",
     layout="wide",
     initial_sidebar_state="collapsed"
+)
+
+# ── 1b. PWA BOOTSTRAP ─────────────────────────────────────────────────────────
+# Streamlit doesn't expose <head>, so we inject manifest + SW registration
+# from inside an iframe component using window.parent.
+components.html(
+    """
+    <script>
+    (function () {
+      try {
+        const parentWin = window.parent;
+        const doc = parentWin.document;
+        const head = doc.head;
+        // Streamlit serves /static/* relative to the app base URL.
+        const base = parentWin.location.pathname.replace(/\\/$/, '');
+        const staticUrl = (f) => base + '/app/static/' + f;
+        const ensure = (selector, build) => {
+          if (!doc.querySelector(selector)) head.appendChild(build());
+        };
+        ensure('link[rel="manifest"]', () => {
+          const l = doc.createElement('link');
+          l.rel = 'manifest';
+          l.href = staticUrl('manifest.json');
+          return l;
+        });
+        ensure('meta[name="theme-color"]', () => {
+          const m = doc.createElement('meta');
+          m.name = 'theme-color';
+          m.content = '#050A14';
+          return m;
+        });
+        ensure('meta[name="apple-mobile-web-app-capable"]', () => {
+          const m = doc.createElement('meta');
+          m.name = 'apple-mobile-web-app-capable';
+          m.content = 'yes';
+          return m;
+        });
+        ensure('meta[name="apple-mobile-web-app-status-bar-style"]', () => {
+          const m = doc.createElement('meta');
+          m.name = 'apple-mobile-web-app-status-bar-style';
+          m.content = 'black-translucent';
+          return m;
+        });
+        ensure('meta[name="apple-mobile-web-app-title"]', () => {
+          const m = doc.createElement('meta');
+          m.name = 'apple-mobile-web-app-title';
+          m.content = 'CM Narang';
+          return m;
+        });
+        ensure('link[rel="apple-touch-icon"]', () => {
+          const l = doc.createElement('link');
+          l.rel = 'apple-touch-icon';
+          l.href = staticUrl('icon-192.png');
+          return l;
+        });
+        const nav = parentWin.navigator;
+        if (nav && 'serviceWorker' in nav) {
+          nav.serviceWorker.register(staticUrl('service-worker.js')).catch(() => {});
+        }
+      } catch (e) { /* ignore */ }
+    })();
+    </script>
+    """,
+    height=0,
 )
 
 # ── 2. ROYAL UI STYLING (CSS) ─────────────────────────────────────────────────
@@ -176,20 +242,85 @@ def fmt_l(n):  return f"₹{n/1e5:.1f} L"
 # ── 4. LIVE GOOGLE SHEETS CONNECTION ──────────────────────────────────────────
 URL = "https://docs.google.com/spreadsheets/d/1PZACfddE3VkcCWqYD-_0j_ERaBUT1SBQqPN63Vylvy0/export?format=csv"
 PLAN_URL = "https://docs.google.com/spreadsheets/d/1PZACfddE3VkcCWqYD-_0j_ERaBUT1SBQqPN63Vylvy0/export?format=csv&gid=1751726483"
+LIVE_RATES_URL = "https://docs.google.com/spreadsheets/d/1PZACfddE3VkcCWqYD-_0j_ERaBUT1SBQqPN63Vylvy0/export?format=csv&gid=1691255921"
 conn = st.connection("gsheets", type=GSheetsConnection)
 
-@st.cache_data(ttl=86400)
+PRICE_TTL = 900    # 15 min — live market prices (GOOGLEFINANCE-backed)
+PLAN_TTL  = 3600   # 1 hour — planning data changes rarely
+
+@st.cache_data(ttl=PRICE_TTL)
 def fetch_data():
-    df = conn.read(spreadsheet=URL)
+    df = conn.read(spreadsheet=URL, ttl=PRICE_TTL)
     if 'Current Value' in df.columns:
         df['Val_Num'] = pd.to_numeric(df['Current Value'].astype(str).replace('[₹,L,Cr, ,]', '', regex=True), errors='coerce').fillna(0)
     assets = df[~df['Asset Name'].str.contains('Total|TOTAL|Sum|Subtotal', na=False)]
     return assets.dropna(subset=['Asset Name'])
 
-@st.cache_data(ttl=86400)
+@st.cache_data(ttl=PLAN_TTL)
 def fetch_plan():
-    df = conn.read(spreadsheet=PLAN_URL).dropna(how='all')
+    df = conn.read(spreadsheet=PLAN_URL, ttl=PLAN_TTL).dropna(how='all')
     return df.fillna('').astype(str).replace({'nan': '', 'NaN': ''})
+
+@st.cache_data(ttl=PRICE_TTL)
+def fetch_live_rates():
+    """Live GOOGLEFINANCE prices from the 'Live Rates' tab, keyed by ticker/symbol (col A → col B)."""
+    df = conn.read(spreadsheet=LIVE_RATES_URL, ttl=PRICE_TTL)
+    prices = {}
+    for _, r in df.iterrows():
+        key = str(r.iloc[0]).strip().upper()
+        try:
+            prices[key] = float(r.iloc[1])
+        except (ValueError, TypeError, IndexError):
+            continue
+    return prices
+
+# ── 4b. NEW INVESTMENTS LEDGER (post-2026-05-11, ICICI Direct lump sums) ──────
+# `ltp` here is only a FALLBACK — live prices are pulled per-render from the
+# 'Live Rates' tab (GOOGLEFINANCE) and matched on the symbol. Any symbol not in
+# that tab falls back to the hardcoded ltp below.
+NEW_LUMPSUM = [
+    # symbol,        name,                            kind,     qty,    buy,     ltp,     date,         platform,        theme
+    ("AVANTIFEED",   "Avanti Feeds",                  "Equity", 72,     1417.00, 1417.90, "2026-05-11", "ICICI Direct",  "Animal protein · defensive"),
+    ("SOUTHBANK",    "South Indian Bank",             "Equity", 2400,   40.67,   40.65,   "2026-05-11", "ICICI Direct",  "PSU/private bank rerating"),
+    ("COALINDIA",    "Coal India",                    "Equity", 217,    460.75,  460.70,  "2026-05-11", "ICICI Direct",  "Energy · high dividend"),
+    ("MOTHERSON",    "Samvardhana Motherson",         "Equity", 760,    131.02,  130.87,  "2026-05-11", "ICICI Direct",  "Auto ancillary"),
+    ("SHILPAMED",    "Shilpa Medicare",               "Equity", 222,    449.40,  447.85,  "2026-05-11", "ICICI Direct",  "Pharma · midcap"),
+]
+
+# SIPs / Direct MF holdings on Zerodha Coin — populate from Jan 2027 onwards
+SIPS_PLANNED = [
+    # ("MOTILAL_MIDCAP", "Motilal Oswal Midcap Direct G", "MF",  25000, "Monthly",  "2027-01-05", "Zerodha Coin", "18% of catch-up bucket"),
+]
+
+# ── 4c. ACTIVE MF SIPs (Zerodha Coin · Direct Growth) ─────────────────────────
+# First tranche of the ₹63L deployment plan (see CAPITAL_PLAN below).
+# Units stored at 4-decimal precision; invested/current stored directly from
+# the Coin holdings screen to avoid rounding drift from units × NAV.
+NEW_MF_SIPS = [
+    # symbol,        name,                        category,    units,      avg_nav,  nav,       invested,    current,     date,         platform,        theme
+    ("EDELWEISS_MC", "Edelweiss Mid Cap Fund",    "Mid Cap",   1623.5463,  123.19,   123.1870,  199994.90,   199990.03,   "2026-06-04", "Zerodha Coin",  "Direct Growth · SIP active"),
+    ("BANDHAN_SC",   "Bandhan Small Cap Fund",    "Small Cap", 1892.2680,   52.84,    52.8440,   99987.44,    99995.01,   "2026-06-04", "Zerodha Coin",  "Direct Growth · SIP active"),
+    ("HDFC_MC",      "HDFC Mid Cap Fund",         "Mid Cap",    909.2848,  219.94,   219.9420,  199988.14,   199989.96,   "2026-06-04", "Zerodha Coin",  "Direct Growth · SIP active"),
+]
+
+# ── 4d. ₹63L CAPITAL DEPLOYMENT (Jun 2026 → Feb 2027) ──────────────────────────
+# Source: ₹40L savings + ₹23L Jun-2026 FD maturity. Parked as 9 monthly-maturity
+# FDs in the bank account; each FD matures and funds that month's deployment.
+# This FD ladder replaces the prior LIQUIDBEES dry-powder mechanism.
+# Per month: ₹5L → MF SIPs (Coin), ₹2L → staggered foreign + Indian direct equity.
+CAPITAL_PLAN = {
+    "total_l":         63.0,
+    "duration_mo":     9,
+    "start":           "Jun 2026",
+    "end":             "Feb 2027",
+    "source_savings":  40.0,
+    "source_fd_jun":   23.0,
+    "monthly_l":        7.0,
+    "monthly_sip_l":    5.0,
+    "monthly_stag_l":   2.0,
+    "deployed_sip_l":   5.0,   # 1st SIP tranche done
+    "deployed_stag_l":  5.0,   # ICICI Direct equity already in (5 stocks ≈ ₹5L); ₹13L remaining for foreign + more direct equity
+}
 
 # ── 5. CALCULATIONS (UPDATED FOR INDIVIDUAL STOCKS) ───────────────────────────
 try:
@@ -205,32 +336,40 @@ try:
     cash_v = assets_df[assets_df['Category'].str.contains('Liquid', na=False)]['Val_Num'].sum()
 
     OVERVIEW_MAP = {
-        "Mutual Funds": mf_v, 
-        "Direct Equity": equity_v, 
-        "ETFs": etf_v, 
-        "Gold": gold_v, 
-        "Fixed Income": fd_v, 
-        "Cash": cash_v
+        "Mutual Funds":    mf_v,
+        "Direct Equity":   equity_v,
+        "ETFs":            etf_v,
+        "Gold":            gold_v,
+        "Fixed Deposits":  1e7,   # ₹100L — bank FD ladder (sheet's Fixed Income value overridden)
+        "Cash":            0,     # held inside monthly-maturity FDs (see CAPITAL_PLAN), not as cash
     }
 except:
     st.stop()
 
 # ── 6. LOGIN SYSTEM ───────────────────────────────────────────────────────────
+ACCESS_PIN = "2323"
 if "logged_in" not in st.session_state: st.session_state.logged_in = False
 if not st.session_state.logged_in:
     st.write("##")
     st.write("##")
     _, col, _ = st.columns([1, 1.5, 1])
     with col:
-        st.markdown("<div class='login-card'><h2 style='color:#C8A84B; margin-bottom:0;'>◈ PRIVATE WEALTH</h2><p style='color:#7A9BBF; font-size:12px; letter-spacing:2px; margin-bottom:30px;'>CHANDRA MOHAN NARANG</p></div>", unsafe_allow_html=True)
-        u = st.text_input("Username", placeholder="Identity")
-        p = st.text_input("Password", type="password", placeholder="Secret Key")
-        if st.button("AUTHENTICATE & ACCESS"):
-            if u == "cm.narang" and p == "Narang@2026":
+        st.markdown("<div class='login-card'><h2 style='color:#C8A84B; margin-bottom:0;'>◈ PRIVATE WEALTH</h2><p style='color:#7A9BBF; font-size:12px; letter-spacing:2px; margin-bottom:8px;'>CHANDRA MOHAN NARANG</p><p style='color:#7A9BBF; font-size:11px; letter-spacing:1.5px; margin-bottom:30px;'>ENTER 4-DIGIT ACCESS PIN</p></div>", unsafe_allow_html=True)
+        with st.form("pin_form", clear_on_submit=False):
+            pin = st.text_input(
+                "Access PIN",
+                type="password",
+                max_chars=4,
+                placeholder="• • • •",
+                label_visibility="collapsed",
+            )
+            submitted = st.form_submit_button("UNLOCK")
+        if submitted:
+            if pin == ACCESS_PIN:
                 st.session_state.logged_in = True
                 st.rerun()
             else:
-                st.error("Invalid Credentials")
+                st.error("Invalid PIN")
     st.stop()
 
 # ── 7. HEADER ─────────────────────────────────────────────────────────────────
@@ -241,10 +380,13 @@ with col_h2:
     st.markdown(f"<div style='text-align: right; padding-top: 18px;'><p style='color: #5C7089; font-size: 10px; letter-spacing: 2px; margin-bottom: 2px;'>VALUATION DATE</p><p style='color: #EAE3D6; font-size: 14px; font-weight: 500; font-family: \"JetBrains Mono\", monospace;'>{pd.Timestamp.now().strftime('%d %B, %Y')}</p></div>", unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 12px 0 18px 0; border: 0; border-top: 1px solid #1C3050;'>", unsafe_allow_html=True)
-tab = st.radio("nav", ["Overview", "Portfolio", "Plan", "Protection", "Actions"], horizontal=True, label_visibility="collapsed")
+tab = st.radio("nav", ["Overview", "Portfolio", "New", "Plan", "Protection", "Actions"], horizontal=True, label_visibility="collapsed")
 
 # ── 8. TABS ───────────────────────────────────────────────────────────────────
 if tab == "Overview":
+    # Use the overridden allocation map for Overview KPIs so totals + pie agree.
+    total_nw = sum(OVERVIEW_MAP.values())
+    cash_v   = OVERVIEW_MAP["Cash"]
     deployed_v = total_nw - cash_v
     k1, k2, k3 = st.columns(3)
     with k1:
@@ -282,26 +424,206 @@ if tab == "Overview":
                 st.markdown(f"<div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid #1C3050; padding-bottom:6px;'><span>{label}{badge}</span><span style='font-family:\"JetBrains Mono\";'>{fmt_l(val)}</span></div>", unsafe_allow_html=True)
 
 elif tab == "Portfolio":
-    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px;'>Detailed Holding Inventory</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px; margin-bottom:4px;'>Detailed Holding Inventory</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#7A9BBF; font-size:11px; letter-spacing:1.5px; margin-bottom:18px;'>LEGACY BOOK · ICICI DIRECT (REGULAR PLANS) + EXISTING DIRECT EQUITY · POST-MAY-2026 PURCHASES TRACKED IN <strong style='color:#C8A84B;'>NEW</strong> TAB</p>", unsafe_allow_html=True)
     disp = assets_df[['Asset Name', 'Category', 'Units / Qty', 'Current Value', 'Val_Num']].copy()
-    disp = disp.sort_values(by='Val_Num', ascending=False) 
+    disp = disp.sort_values(by='Val_Num', ascending=False)
     disp['Alloc %'] = (disp['Val_Num'] / total_nw * 100).round(1).astype(str) + '%'
     html = "<table class='static-table'><thead><tr><th>Asset Name</th><th>Category</th><th>Qty</th><th>Value</th><th>Alloc %</th></tr></thead><tbody>"
     for _, r in disp.iterrows():
         html += f"<tr><td>{r['Asset Name']}</td><td>{r['Category']}</td><td>{r['Units / Qty']}</td><td>{fmt_l(r['Val_Num'])}</td><td>{r['Alloc %']}</td></tr>"
     st.markdown(html + "</tbody></table>", unsafe_allow_html=True)
 
+elif tab == "New":
+    today = pd.Timestamp.now().date()
+
+    # Live prices for the new equities (GOOGLEFINANCE via the 'Live Rates' tab).
+    # Falls back to the hardcoded ltp for any symbol not in the sheet.
+    live_prices = fetch_live_rates()
+
+    # Equity rows (ICICI Direct lump sums)
+    eq = []
+    for sym, name, kind, qty, buy, ltp, dt, plat, theme in NEW_LUMPSUM:
+        ltp = live_prices.get(sym.upper(), ltp)
+        d = datetime.strptime(dt, "%Y-%m-%d").date()
+        invested = qty * buy
+        current  = qty * ltp
+        pnl      = current - invested
+        ret_pct  = (pnl / invested * 100) if invested else 0
+        eq.append(dict(symbol=sym, name=name, kind=kind, qty=qty, buy=buy, ltp=ltp,
+                       date=d, days=(today - d).days, invested=invested, current=current,
+                       pnl=pnl, ret=ret_pct, platform=plat, theme=theme))
+
+    # MF SIP rows (Zerodha Coin · Direct Growth) — invested/current stored
+    # directly from Coin to avoid rounding drift.
+    mf_rows = []
+    for sym, name, category, units, avg_nav, nav, invested, current, dt, plat, theme in NEW_MF_SIPS:
+        d = datetime.strptime(dt, "%Y-%m-%d").date()
+        pnl = current - invested
+        ret_pct = (pnl / invested * 100) if invested else 0
+        mf_rows.append(dict(symbol=sym, name=name, category=category, units=units,
+                            avg_nav=avg_nav, nav=nav, date=d, days=(today - d).days,
+                            invested=invested, current=current, pnl=pnl, ret=ret_pct,
+                            platform=plat, theme=theme))
+
+    inv_eq = sum(r['invested'] for r in eq)
+    cur_eq = sum(r['current']  for r in eq)
+    pnl_eq = cur_eq - inv_eq
+    ret_eq = (pnl_eq / inv_eq * 100) if inv_eq else 0
+
+    inv_mf = sum(r['invested'] for r in mf_rows)
+    cur_mf = sum(r['current']  for r in mf_rows)
+    pnl_mf = cur_mf - inv_mf
+    ret_mf = (pnl_mf / inv_mf * 100) if inv_mf else 0
+
+    inv_total = inv_eq + inv_mf
+    cur_total = cur_eq + cur_mf
+    pnl_total = cur_total - inv_total
+    ret_total = (pnl_total / inv_total * 100) if inv_total else 0
+
+    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px; margin-bottom:4px;'>New Investments · Live Tracking</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#7A9BBF; font-size:11px; letter-spacing:1.5px; margin-bottom:18px;'>POST 2026-05-11 · DIRECT-PLAN SIPs ON ZERODHA COIN · LUMP SUMS VIA ICICI DIRECT · ₹63L LADDER FUNDING THE SIPs (SEE PLAN TAB)</p>", unsafe_allow_html=True)
+
+    # KPI Row
+    k1, k2, k3, k4 = st.columns(4)
+    pnl_color = "#57C785" if pnl_total >= 0 else "#FF6B6B"
+    sig = "+" if pnl_total >= 0 else ""
+    with k1:
+        st.markdown(f"<div class='kpi-tile'><span class='kpi-icon'>◈</span><p class='kpi-label'>New Deployed</p><p class='kpi-value'>{fmt_l(inv_total)}</p></div>", unsafe_allow_html=True)
+    with k2:
+        st.markdown(f"<div class='kpi-tile'><span class='kpi-icon'>✦</span><p class='kpi-label'>MF SIPs</p><p class='kpi-value'>{fmt_l(inv_mf)}</p></div>", unsafe_allow_html=True)
+    with k3:
+        st.markdown(f"<div class='kpi-tile'><span class='kpi-icon'>▲</span><p class='kpi-label'>Direct Equity</p><p class='kpi-value'>{fmt_l(inv_eq)}</p></div>", unsafe_allow_html=True)
+    with k4:
+        st.markdown(f"<div class='kpi-tile'><span class='kpi-icon'>±</span><p class='kpi-label'>Net P&amp;L</p><p class='kpi-value' style='color:{pnl_color};'>{sig}{ret_total:.2f}%</p></div>", unsafe_allow_html=True)
+
+    # ── MF SIPs table (Zerodha Coin · Direct Growth) ──
+    st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ MF SIPs · Zerodha Coin (Direct Plans)</p>", unsafe_allow_html=True)
+    mf_html = "<table class='static-table'><thead><tr><th>Fund</th><th>Category</th><th>Units</th><th>Avg NAV</th><th>NAV</th><th>Invested</th><th>Current</th><th>Return</th><th>Held</th></tr></thead><tbody>"
+    for r in mf_rows:
+        rc = "#57C785" if r['ret'] >= 0 else "#FF6B6B"
+        rs = "+" if r['ret'] >= 0 else ""
+        mf_html += (
+            f"<tr><td><strong>{r['name']}</strong><br><span style='color:#7A9BBF; font-size:10px;'>{r['theme']}</span></td>"
+            f"<td style='color:#7A9BBF; font-size:11px;'>{r['category']}</td>"
+            f"<td style='font-family:\"JetBrains Mono\";'>{r['units']:.4f}</td>"
+            f"<td style='font-family:\"JetBrains Mono\";'>{r['avg_nav']:.2f}</td>"
+            f"<td style='font-family:\"JetBrains Mono\";'>{r['nav']:.4f}</td>"
+            f"<td>{fmt_l(r['invested'])}</td>"
+            f"<td>{fmt_l(r['current'])}</td>"
+            f"<td style='color:{rc}; font-family:\"JetBrains Mono\"; font-weight:600;'>{rs}{r['ret']:.2f}%</td>"
+            f"<td style='font-family:\"JetBrains Mono\";'>{r['days']}d</td></tr>"
+        )
+    sub_c_mf = "#57C785" if ret_mf >= 0 else "#FF6B6B"
+    sub_s_mf = "+" if ret_mf >= 0 else ""
+    mf_html += (
+        f"<tr style='font-weight:700; color:#E2CC8A;'>"
+        f"<td colspan='5' style='border-top:2px solid #C8A84B;'>SUBTOTAL · {len(mf_rows)} FUNDS</td>"
+        f"<td style='border-top:2px solid #C8A84B;'>{fmt_l(inv_mf)}</td>"
+        f"<td style='border-top:2px solid #C8A84B;'>{fmt_l(cur_mf)}</td>"
+        f"<td style='color:{sub_c_mf}; border-top:2px solid #C8A84B;'>{sub_s_mf}{ret_mf:.2f}%</td>"
+        f"<td style='border-top:2px solid #C8A84B;'>—</td></tr>"
+    )
+    mf_html += "</tbody></table>"
+    st.markdown(mf_html, unsafe_allow_html=True)
+
+    # ── Direct Equity table ──
+    st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ Direct Equity · ICICI Direct</p>", unsafe_allow_html=True)
+    eq_html = "<table class='static-table'><thead><tr><th>Symbol</th><th>Theme</th><th>Qty</th><th>Buy ₹</th><th>LTP ₹</th><th>Invested</th><th>Current</th><th>Return</th><th>Held</th></tr></thead><tbody>"
+    for r in eq:
+        rc = "#57C785" if r['ret'] >= 0 else "#FF6B6B"
+        rs = "+" if r['ret'] >= 0 else ""
+        eq_html += (
+            f"<tr><td><strong>{r['symbol']}</strong><br><span style='color:#7A9BBF; font-size:10px;'>{r['name']}</span></td>"
+            f"<td style='color:#7A9BBF; font-size:11px;'>{r['theme']}</td>"
+            f"<td>{r['qty']}</td>"
+            f"<td style='font-family:\"JetBrains Mono\";'>{r['buy']:.2f}</td>"
+            f"<td style='font-family:\"JetBrains Mono\";'>{r['ltp']:.2f}</td>"
+            f"<td>{fmt_l(r['invested'])}</td>"
+            f"<td>{fmt_l(r['current'])}</td>"
+            f"<td style='color:{rc}; font-family:\"JetBrains Mono\"; font-weight:600;'>{rs}{r['ret']:.2f}%</td>"
+            f"<td style='font-family:\"JetBrains Mono\";'>{r['days']}d</td></tr>"
+        )
+    sub_c = "#57C785" if ret_eq >= 0 else "#FF6B6B"
+    sub_s = "+" if ret_eq >= 0 else ""
+    eq_html += (
+        f"<tr style='font-weight:700; color:#E2CC8A;'>"
+        f"<td colspan='5' style='border-top:2px solid #C8A84B;'>SUBTOTAL · {len(eq)} HOLDINGS</td>"
+        f"<td style='border-top:2px solid #C8A84B;'>{fmt_l(inv_eq)}</td>"
+        f"<td style='border-top:2px solid #C8A84B;'>{fmt_l(cur_eq)}</td>"
+        f"<td style='color:{sub_c}; border-top:2px solid #C8A84B;'>{sub_s}{ret_eq:.2f}%</td>"
+        f"<td style='border-top:2px solid #C8A84B;'>—</td></tr>"
+    )
+    eq_html += "</tbody></table>"
+    st.markdown(eq_html, unsafe_allow_html=True)
+
+    # Segregation footer
+    st.markdown("""
+    <div style='background:rgba(200,168,75,0.08); border-left:3px solid #C8A84B; padding:14px 18px; border-radius:8px; margin-top:24px;'>
+    <p style='color:#C8A84B; font-size:11px; letter-spacing:1.5px; margin:0 0 6px 0; font-weight:600;'>SEGREGATION</p>
+    <p style='color:#EAE3D6; font-size:12px; margin:0; line-height:1.65;'>
+    This view tracks <strong>only new investments made from 2026-05-11 onwards</strong>. Legacy holdings —
+    existing Regular-plan MFs, older direct equity, FDs, gold — continue to live in the <strong style='color:#C8A84B;'>Portfolio</strong> tab from the master Google Sheet.
+    Monthly SIP tranches are funded by a <strong>₹63L FD ladder</strong> in the bank account (one maturity / month, Jun 2026 → Feb 2027) — full schedule in the <strong style='color:#C8A84B;'>Plan</strong> tab.
+    </p>
+    </div>
+    """, unsafe_allow_html=True)
+
 elif tab == "Plan":
     plan_df = fetch_plan()
-    cf  = plan_df[plan_df['Section'] == 'Cashflow']
-    aif = plan_df[plan_df['Section'] == 'AIF']
-    alloc = plan_df[plan_df['Section'] == 'Allocation']
+    cf = plan_df[plan_df['Section'] == 'Cashflow']
 
     # ── Hero summary ──
     st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px; margin-bottom:4px;'>Strategic Plan · 5-Year Horizon</p>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#7A9BBF; font-size:12px; letter-spacing:1px; margin-bottom:24px;'>AIF COMMITMENT · CASH FLOW MAP · THREE RISK PATHS</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#7A9BBF; font-size:12px; letter-spacing:1px; margin-bottom:24px;'>CASH FLOW MAP · TWO-PHASE ALLOCATION</p>", unsafe_allow_html=True)
+
+    # ── ₹63L Capital Deployment (FD ladder) ──
+    sip_deployed  = CAPITAL_PLAN['deployed_sip_l']
+    stag_deployed = CAPITAL_PLAN['deployed_stag_l']
+    total_deployed = sip_deployed + stag_deployed
+    total_pool   = CAPITAL_PLAN['total_l']
+    sip_pool     = CAPITAL_PLAN['monthly_sip_l']  * CAPITAL_PLAN['duration_mo']
+    stag_pool    = CAPITAL_PLAN['monthly_stag_l'] * CAPITAL_PLAN['duration_mo']
+    overall_pct  = (total_deployed / total_pool * 100) if total_pool else 0
+
+    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ Capital Deployment · ₹63L Over 9 Months</p>", unsafe_allow_html=True)
+    st.markdown(
+        f"<div class='insurance-card'>"
+        f"<div style='display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;'>"
+        f"<span style='background:rgba(200,168,75,0.12); color:#E2CC8A; font-size:11px; padding:6px 12px; border-radius:14px; letter-spacing:0.5px; font-weight:600;'>₹{CAPITAL_PLAN['source_savings']:.0f}L Savings</span>"
+        f"<span style='color:#7A9BBF; font-size:11px; align-self:center;'>+</span>"
+        f"<span style='background:rgba(200,168,75,0.12); color:#E2CC8A; font-size:11px; padding:6px 12px; border-radius:14px; letter-spacing:0.5px; font-weight:600;'>₹{CAPITAL_PLAN['source_fd_jun']:.0f}L Jun-FD Maturity</span>"
+        f"<span style='color:#7A9BBF; font-size:11px; align-self:center;'>→</span>"
+        f"<span style='background:linear-gradient(90deg, #C8A84B, #E2CC8A); color:#0A1528; font-size:11px; padding:6px 14px; border-radius:14px; letter-spacing:0.5px; font-weight:700;'>₹{CAPITAL_PLAN['total_l']:.0f}L TOTAL</span>"
+        f"</div>"
+        f"<p style='color:#7A9BBF; font-size:11px; line-height:1.6; margin:6px 0 18px 0; font-style:italic;'>"
+        f"₹{CAPITAL_PLAN['total_l']:.0f}L parked as <strong style='color:#EAE3D6;'>{CAPITAL_PLAN['duration_mo']} monthly-maturity FDs</strong> in the bank account; one FD matures each month from "
+        f"<strong style='color:#EAE3D6;'>{CAPITAL_PLAN['start']} → {CAPITAL_PLAN['end']}</strong>, releasing ~₹{CAPITAL_PLAN['monthly_l']:.0f}L. "
+        f"<strong style='color:#EAE3D6;'>₹{CAPITAL_PLAN['monthly_sip_l']:.0f}L</strong> routes to MF SIPs on Coin, "
+        f"<strong style='color:#EAE3D6;'>₹{CAPITAL_PLAN['monthly_stag_l']:.0f}L</strong> deployed opportunistically into foreign funds + Indian direct equity."
+        f"</p>"
+        f"<div style='border-top:1px solid #1C3050; padding-top:14px;'>"
+        f"<div style='display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;'>"
+        f"<p style='color:#C8A84B; font-size:11px; letter-spacing:1.5px; margin:0; font-weight:600;'>OVERALL DEPLOYMENT PROGRESS</p>"
+        f"<p style='font-family:\"JetBrains Mono\"; color:#E2CC8A; font-size:14px; margin:0; font-weight:600;'>{overall_pct:.1f}%</p>"
+        f"</div>"
+        f"<div style='background:#0A1528; height:12px; border-radius:6px; overflow:hidden; border:1px solid #1C3050;'>"
+        f"<div style='height:100%; width:{overall_pct}%; background:linear-gradient(90deg, #C8A84B, #E2CC8A); box-shadow: 0 0 12px rgba(200,168,75,0.4);'></div>"
+        f"</div>"
+        f"<div style='display:flex; justify-content:space-between; margin-top:10px; gap:12px;'>"
+        f"<p style='color:#7A9BBF; font-size:10px; margin:0;'>SIP: <strong style='color:#57C785;'>₹{sip_deployed:.1f}L</strong> / ₹{sip_pool:.0f}L</p>"
+        f"<p style='color:#7A9BBF; font-size:10px; margin:0;'>Staggered: <strong style='color:#E2CC8A;'>₹{stag_deployed:.1f}L</strong> / ₹{stag_pool:.0f}L</p>"
+        f"<p style='color:#7A9BBF; font-size:10px; margin:0; text-align:right;'>Remaining: <strong style='color:#EAE3D6;'>₹{total_pool - total_deployed:.1f}L</strong></p>"
+        f"</div>"
+        f"</div>"
+        f"</div>",
+        unsafe_allow_html=True
+    )
 
     # ── Cash Flow ──
+    st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
     st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ Cash Flow Map (8 Months)</p>", unsafe_allow_html=True)
     cf_html = "<table class='static-table'><thead><tr><th>Month</th><th>Source</th><th>Inflow (₹L)</th><th>Notes</th></tr></thead><tbody>"
     for _, r in cf.iterrows():
@@ -311,96 +633,78 @@ elif tab == "Plan":
     cf_html += "</tbody></table>"
     st.markdown(cf_html, unsafe_allow_html=True)
 
-    # ── AIF Funding ──
+    # ── Two-Phase Allocation ──
     st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ AIF Funding Flow · ₹1 Cr</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ Two-Phase Allocation · Catch-up → De-risk</p>", unsafe_allow_html=True)
 
-    fig_sankey = go.Figure(go.Sankey(
-        arrangement='snap',
-        node=dict(
-            pad=24, thickness=22,
-            line=dict(color='rgba(200,168,75,0.4)', width=0.6),
-            label=[
-                "₹70 L · Existing Cash",
-                "₹24 L · FD (5 Jun)",
-                "₹6 L · Surplus Top-up",
-                "Liquid Fund Kitty · ₹100 L",
-                "AIF · Cat III · ₹1 Cr"
-            ],
-            color=['#52A2FF', '#57C785', '#46C1C1', '#C8A84B', '#E2CC8A'],
-            x=[0.01, 0.01, 0.01, 0.45, 0.99],
-            y=[0.15, 0.50, 0.85, 0.50, 0.50]
-        ),
-        link=dict(
-            source=[0, 1, 2, 3],
-            target=[3, 3, 3, 4],
-            value=[70, 24, 6, 100],
-            color=[
-                'rgba(82,162,255,0.45)',
-                'rgba(87,199,133,0.45)',
-                'rgba(70,193,193,0.45)',
-                'rgba(200,168,75,0.55)'
-            ],
-            label=[
-                'Earns ~6.5–7% in liquid till capital call',
-                'Top-up to kitty',
-                'Top-up to kitty',
-                'Drawn over Jun–Dec 2026 on capital calls'
+    PHASES = [
+        {
+            'tag':      'NOW · 2026-27',
+            'title':    'Catch-up · Aggressive',
+            'subtitle': 'Target: 14-15% pre-tax',
+            'note':     'Mid/smallcap has been ~flat for 2 years. Front-load equity to ride the mean-reversion.',
+            'rows': [
+                ('Mid + Small Cap MF',     '50%', 'Mean-reversion bet · 2-yr flat → ~16-17%'),
+                ('Flexi Cap MF',           '25%', 'Active anchor · ~13-14%'),
+                ('Tactical Direct Equity', '10%', 'Energy + Pharma sectors · ~17-18%'),
+                ('International',          '10%', 'US/Global feeder · ~12%'),
+                ('Liquid Buffer',          '5%',  'Dry powder for dips · ~7%'),
             ]
-        )
-    ))
-    fig_sankey.update_layout(
-        height=340,
-        paper_bgcolor='rgba(0,0,0,0)',
-        plot_bgcolor='rgba(0,0,0,0)',
-        font=dict(family='Inter, sans-serif', color='#EAE3D6', size=12),
-        margin=dict(t=20, b=20, l=20, r=20)
-    )
-    st.plotly_chart(fig_sankey, use_container_width=True)
+        },
+        {
+            'tag':      'FROM 2027',
+            'title':    'De-risk · Moderate',
+            'subtitle': 'Target: 11-12% pre-tax',
+            'note':     'After Y1 catch-up, lock in gains and rebuild downside cushion. Same engine, lower beta.',
+            'rows': [
+                ('Mid + Small Cap MF',     '35%', 'Trimmed from 50% · ~14%'),
+                ('Flexi Cap MF',           '30%', 'Increased anchor · ~12%'),
+                ('Large Cap Index',        '10%', 'NIFTYBEES + Junior · ~11%'),
+                ('International',          '10%', 'Hold steady · ~12%'),
+                ('Debt (Arbitrage+Bonds)', '15%', 'New cushion · ~7%'),
+            ]
+        }
+    ]
 
-    aif_html = "<div class='insurance-card' style='padding:18px 24px; margin-top:8px;'><span class='insurance-icon'>✦</span>"
-    for _, r in aif.iterrows():
-        amt = f" — <span style='font-family:\"JetBrains Mono\"; color:#E2CC8A;'>₹{r['Amount (Rs L)']} L</span>" if str(r['Amount (Rs L)']).strip() not in ['','nan'] else ""
-        aif_html += f"<p style='margin:6px 0; font-size:13px; color:#EAE3D6;'><strong style='color:#C8A84B;'>{r['Item']}:</strong> {r['Detail']}{amt} <span style='color:#7A9BBF; font-size:11px;'>{r['Notes']}</span></p>"
-    aif_html += "</div>"
-    st.markdown(aif_html, unsafe_allow_html=True)
-
-    # ── Three Allocation Paths ──
-    st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ Three Strategic Paths · Non-AIF Capital</p>", unsafe_allow_html=True)
-
-    cols = st.columns(3)
-    for col, path_label in zip(cols, ['A','B','C']):
-        path_rows = alloc[alloc['Path'] == path_label]
-        risk = path_rows[path_rows['Item'] == 'Risk Level']['Detail'].values
-        ret  = path_rows[path_rows['Item'] == 'Expected Return']['Detail'].values
-        risk = risk[0] if len(risk) else ''
-        ret  = ret[0]  if len(ret)  else ''
+    cols = st.columns(2)
+    for col, phase in zip(cols, PHASES):
         body = "".join([
             f"<div style='display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #1C3050;'>"
-            f"<span style='font-size:12px; color:#EAE3D6;'>{r['Item']}</span>"
-            f"<span style='font-size:12px; color:#C8A84B; font-family:\"JetBrains Mono\"; font-weight:600;'>{r['Detail']}</span>"
+            f"<span style='font-size:12px; color:#EAE3D6;'>{item}</span>"
+            f"<span style='font-size:12px; color:#C8A84B; font-family:\"JetBrains Mono\"; font-weight:600;'>{detail}</span>"
             f"</div>"
-            f"<p style='font-size:10px; color:#7A9BBF; margin:2px 0 8px 0; line-height:1.4;'>{r['Notes']}</p>"
-            for _, r in path_rows.iterrows()
-            if r['Item'] not in ('Risk Level','Expected Return','5-yr deploy')
+            f"<p style='font-size:10px; color:#7A9BBF; margin:2px 0 8px 0; line-height:1.4;'>{note}</p>"
+            for item, detail, note in phase['rows']
         ])
         with col:
             st.markdown(
                 f"<div class='insurance-card' style='min-height:100%;'>"
-                f"<p style='color:#7A9BBF; font-size:10px; letter-spacing:2px; margin:0;'>PATH {path_label}</p>"
-                f"<h3 style='margin:4px 0 4px 0; font-size:16px; color:#C8A84B; font-weight:700;'>{risk}</h3>"
-                f"<p style='color:#E2CC8A; font-size:13px; font-family:\"JetBrains Mono\"; margin:0 0 14px 0;'>{ret}</p>"
+                f"<p style='color:#7A9BBF; font-size:10px; letter-spacing:2px; margin:0;'>{phase['tag']}</p>"
+                f"<h3 style='margin:4px 0 4px 0; font-size:16px; color:#C8A84B; font-weight:700;'>{phase['title']}</h3>"
+                f"<p style='color:#E2CC8A; font-size:13px; font-family:\"JetBrains Mono\"; margin:0 0 8px 0;'>{phase['subtitle']}</p>"
+                f"<p style='color:#7A9BBF; font-size:11px; margin:0 0 14px 0; line-height:1.5; font-style:italic;'>{phase['note']}</p>"
                 f"{body}"
                 f"</div>",
                 unsafe_allow_html=True
             )
 
+    # Transition mechanics note
+    st.markdown("""
+    <div style='background:rgba(200,168,75,0.08); border-left:3px solid #C8A84B; padding:14px 18px; border-radius:8px; margin-top:18px;'>
+    <p style='color:#C8A84B; font-size:11px; letter-spacing:1.5px; margin:0 0 6px 0; font-weight:600;'>TRANSITION MECHANICS (END OF Y1)</p>
+    <p style='color:#EAE3D6; font-size:12px; margin:0; line-height:1.6;'>
+    Trim Mid/Small <strong>50% → 35%</strong> (-15%), exit Tactical Equity <strong>10% → 0%</strong>, drain Liquid <strong>5% → 0%</strong>.
+    Redeploy 30% into: Flexi <strong>+5%</strong>, Large Cap Index <strong>+10%</strong>, Debt <strong>+15%</strong>.
+    Holdings sold after May 2027 qualify for LTCG @ 14.95% — modest tax cost in exchange for downside cushion entering Y2.
+    </p>
+    </div>
+    """, unsafe_allow_html=True)
+
     # ── Footnote ──
     st.markdown("""
     <div style='background:rgba(200,168,75,0.08); border-left:3px solid #C8A84B; padding:14px 18px; border-radius:8px; margin-top:24px;'>
     <p style='color:#C8A84B; font-size:11px; letter-spacing:1.5px; margin:0 0 6px 0; font-weight:600;'>DEPLOYMENT NOTE</p>
-    <p style='color:#EAE3D6; font-size:12px; margin:0; line-height:1.6;'>Lump-sum maturities (₹52L Dec FD) routed via <strong>STP over 12 months</strong>; monthly ₹5L surplus deployed as fresh SIP under chosen path. Existing ₹1L Aggressive (Top 3) SIP continues unchanged.</p>
+    <p style='color:#EAE3D6; font-size:12px; margin:0; line-height:1.6;'>Lump-sum maturities (₹52L Dec FD) routed via <strong>STP over 12 months</strong>; monthly ₹5L surplus deployed as fresh SIP per the Phase 1 weights, transitioning to Phase 2 from Apr 2027. Existing ₹1L Aggressive (Top 3) SIP continues unchanged.</p>
     </div>
     """, unsafe_allow_html=True)
 
