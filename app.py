@@ -285,15 +285,17 @@ MF_SCHEME_CODES = {
 
 @st.cache_data(ttl=PRICE_TTL)
 def fetch_mf_navs():
-    """Latest NAV per fund from api.mfapi.in (free, AMFI-backed). Keyed by our internal symbol."""
+    """Latest NAV per fund from api.mfapi.in (AMFI-backed). Returns (navs_dict, as_of_DDMMYYYY)."""
     navs = {}
+    as_of = None
     for sym, code in MF_SCHEME_CODES.items():
         try:
             payload = requests.get(f"https://api.mfapi.in/mf/{code}", timeout=5).json()
             navs[sym] = float(payload["data"][0]["nav"])
+            as_of = as_of or payload["data"][0]["date"]   # AMFI publishes all funds together
         except Exception:
             continue   # silently fall back to the hardcoded NAV in NEW_MF_SIPS
-    return navs
+    return navs, as_of
 
 # ── 4b. NEW INVESTMENTS LEDGER (post-2026-05-11, ICICI Direct lump sums) ──────
 # `ltp` here is only a FALLBACK — live prices are pulled per-render from the
@@ -409,7 +411,7 @@ if tab == "Overview":
     # Overview allocation so the first page is the complete picture. Both
     # sides priced live: equities via fetch_live_rates, MFs via fetch_mf_navs.
     live_prices = fetch_live_rates()
-    live_navs   = fetch_mf_navs()
+    live_navs, _ = fetch_mf_navs()
     inv_eq_new = sum(
         qty * live_prices.get(sym.upper(), ltp)
         for sym, name, kind, qty, buy, ltp, dt, plat, theme in NEW_LUMPSUM
@@ -495,7 +497,7 @@ elif tab == "New":
 
     # MF SIP rows — pull live NAVs from AMFI (mfapi.in); current value =
     # units × live NAV. Falls back to the hardcoded NAV if the API is down.
-    live_navs = fetch_mf_navs()
+    live_navs, nav_as_of = fetch_mf_navs()
     mf_rows = []
     for sym, name, category, units, avg_nav, nav, invested, current, dt, plat, theme in NEW_MF_SIPS:
         nav = live_navs.get(sym, nav)
@@ -541,7 +543,11 @@ elif tab == "New":
 
     # ── MF SIPs table (Zerodha Coin · Direct Growth) ──
     st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ MF SIPs · Zerodha Coin (Direct Plans)</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 4px 0;'>◈ MF SIPs · Zerodha Coin (Direct Plans)</p>", unsafe_allow_html=True)
+    if nav_as_of:
+        st.markdown(f"<p style='color:#57C785; font-size:10px; letter-spacing:1.2px; margin:0 0 12px 0;'>● LIVE · NAVs as of {nav_as_of} (AMFI via mfapi.in)</p>", unsafe_allow_html=True)
+    else:
+        st.markdown("<p style='color:#FF6B6B; font-size:10px; letter-spacing:1.2px; margin:0 0 12px 0;'>○ NAV feed unavailable — showing last-known values</p>", unsafe_allow_html=True)
     mf_html = "<table class='static-table'><thead><tr><th>Fund</th><th>Category</th><th>Units</th><th>Avg NAV</th><th>NAV</th><th>Invested</th><th>Current</th><th>Return</th><th>Held</th></tr></thead><tbody>"
     for r in mf_rows:
         rc = "#57C785" if r['ret'] >= 0 else "#FF6B6B"
