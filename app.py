@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.graph_objects as go
 from streamlit_gsheets import GSheetsConnection
 from datetime import date, datetime
+import requests
 
 # ── 1. PAGE CONFIGURATION ─────────────────────────────────────────────────────
 st.set_page_config(
@@ -274,6 +275,26 @@ def fetch_live_rates():
             continue
     return prices
 
+# AMFI scheme codes for the active SIPs — used to pull live NAVs via mfapi.in.
+# (AMFI NAVs update once daily after market close; a 15-min cache is plenty.)
+MF_SCHEME_CODES = {
+    "EDELWEISS_MC": "140228",   # Edelweiss Mid Cap Fund - Direct Plan - Growth
+    "BANDHAN_SC":   "147946",   # Bandhan Small Cap Fund - Direct Plan - Growth
+    "HDFC_MC":      "118989",   # HDFC Mid Cap Fund - Direct Plan - Growth
+}
+
+@st.cache_data(ttl=PRICE_TTL)
+def fetch_mf_navs():
+    """Latest NAV per fund from api.mfapi.in (free, AMFI-backed). Keyed by our internal symbol."""
+    navs = {}
+    for sym, code in MF_SCHEME_CODES.items():
+        try:
+            payload = requests.get(f"https://api.mfapi.in/mf/{code}", timeout=5).json()
+            navs[sym] = float(payload["data"][0]["nav"])
+        except Exception:
+            continue   # silently fall back to the hardcoded NAV in NEW_MF_SIPS
+    return navs
+
 # ── 4b. NEW INVESTMENTS LEDGER (post-2026-05-11, ICICI Direct lump sums) ──────
 # `ltp` here is only a FALLBACK — live prices are pulled per-render from the
 # 'Live Rates' tab (GOOGLEFINANCE) and matched on the symbol. Any symbol not in
@@ -385,13 +406,18 @@ tab = st.radio("nav", ["Overview", "Legacy PF", "New", "Plan", "Protection", "Ac
 # ── 8. TABS ───────────────────────────────────────────────────────────────────
 if tab == "Overview":
     # Fold New tab holdings (Coin MF SIPs + ICICI Direct equities) into the
-    # Overview allocation so the first page is the complete picture.
+    # Overview allocation so the first page is the complete picture. Both
+    # sides priced live: equities via fetch_live_rates, MFs via fetch_mf_navs.
     live_prices = fetch_live_rates()
+    live_navs   = fetch_mf_navs()
     inv_eq_new = sum(
         qty * live_prices.get(sym.upper(), ltp)
         for sym, name, kind, qty, buy, ltp, dt, plat, theme in NEW_LUMPSUM
     )
-    inv_mf_new = sum(current for *_, current, _dt, _plat, _theme in NEW_MF_SIPS)
+    inv_mf_new = sum(
+        units * live_navs.get(sym, nav)
+        for sym, name, category, units, avg_nav, nav, invested, current, dt, plat, theme in NEW_MF_SIPS
+    )
 
     OVERVIEW_MAP = {
         "Mutual Funds":    mf_v + inv_mf_new,
@@ -467,10 +493,13 @@ elif tab == "New":
                        date=d, days=(today - d).days, invested=invested, current=current,
                        pnl=pnl, ret=ret_pct, platform=plat, theme=theme))
 
-    # MF SIP rows (Zerodha Coin · Direct Growth) — invested/current stored
-    # directly from Coin to avoid rounding drift.
+    # MF SIP rows — pull live NAVs from AMFI (mfapi.in); current value =
+    # units × live NAV. Falls back to the hardcoded NAV if the API is down.
+    live_navs = fetch_mf_navs()
     mf_rows = []
     for sym, name, category, units, avg_nav, nav, invested, current, dt, plat, theme in NEW_MF_SIPS:
+        nav = live_navs.get(sym, nav)
+        current = units * nav
         d = datetime.strptime(dt, "%Y-%m-%d").date()
         pnl = current - invested
         ret_pct = (pnl / invested * 100) if invested else 0
