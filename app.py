@@ -380,7 +380,7 @@ with col_h2:
     st.markdown(f"<div style='text-align: right; padding-top: 18px;'><p style='color: #5C7089; font-size: 10px; letter-spacing: 2px; margin-bottom: 2px;'>VALUATION DATE</p><p style='color: #EAE3D6; font-size: 14px; font-weight: 500; font-family: \"JetBrains Mono\", monospace;'>{pd.Timestamp.now().strftime('%d %B, %Y')}</p></div>", unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 12px 0 18px 0; border: 0; border-top: 1px solid #1C3050;'>", unsafe_allow_html=True)
-tab = st.radio("nav", ["Overview", "Portfolio", "New", "Plan", "Protection", "Actions"], horizontal=True, label_visibility="collapsed")
+tab = st.radio("nav", ["Overview", "Legacy PF", "New", "Plan", "Protection", "Actions"], horizontal=True, label_visibility="collapsed")
 
 # ── 8. TABS ───────────────────────────────────────────────────────────────────
 if tab == "Overview":
@@ -423,8 +423,8 @@ if tab == "Overview":
                 badge = " <span style='background:rgba(87,199,133,0.15); color:#57C785; font-size:9px; padding:2px 8px; border-radius:10px; margin-left:8px; font-weight:600; letter-spacing:0.5px; vertical-align:middle;'>READY TO DEPLOY</span>" if label == "Cash" else ""
                 st.markdown(f"<div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid #1C3050; padding-bottom:6px;'><span>{label}{badge}</span><span style='font-family:\"JetBrains Mono\";'>{fmt_l(val)}</span></div>", unsafe_allow_html=True)
 
-elif tab == "Portfolio":
-    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px; margin-bottom:4px;'>Detailed Holding Inventory</p>", unsafe_allow_html=True)
+elif tab == "Legacy PF":
+    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px; margin-bottom:4px;'>Legacy Portfolio · Detailed Holdings</p>", unsafe_allow_html=True)
     st.markdown("<p style='color:#7A9BBF; font-size:11px; letter-spacing:1.5px; margin-bottom:18px;'>LEGACY BOOK · ICICI DIRECT (REGULAR PLANS) + EXISTING DIRECT EQUITY · POST-MAY-2026 PURCHASES TRACKED IN <strong style='color:#C8A84B;'>NEW</strong> TAB</p>", unsafe_allow_html=True)
     disp = assets_df[['Asset Name', 'Category', 'Units / Qty', 'Current Value', 'Val_Num']].copy()
     disp = disp.sort_values(by='Val_Num', ascending=False)
@@ -565,19 +565,16 @@ elif tab == "New":
     <p style='color:#C8A84B; font-size:11px; letter-spacing:1.5px; margin:0 0 6px 0; font-weight:600;'>SEGREGATION</p>
     <p style='color:#EAE3D6; font-size:12px; margin:0; line-height:1.65;'>
     This view tracks <strong>only new investments made from 2026-05-11 onwards</strong>. Legacy holdings —
-    existing Regular-plan MFs, older direct equity, FDs, gold — continue to live in the <strong style='color:#C8A84B;'>Portfolio</strong> tab from the master Google Sheet.
+    existing Regular-plan MFs, older direct equity, FDs, gold — continue to live in the <strong style='color:#C8A84B;'>Legacy PF</strong> tab from the master Google Sheet.
     Monthly SIP tranches are funded by a <strong>₹63L FD ladder</strong> in the bank account (one maturity / month, Jun 2026 → Feb 2027) — full schedule in the <strong style='color:#C8A84B;'>Plan</strong> tab.
     </p>
     </div>
     """, unsafe_allow_html=True)
 
 elif tab == "Plan":
-    plan_df = fetch_plan()
-    cf = plan_df[plan_df['Section'] == 'Cashflow']
-
     # ── Hero summary ──
     st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px; margin-bottom:4px;'>Strategic Plan · 5-Year Horizon</p>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#7A9BBF; font-size:12px; letter-spacing:1px; margin-bottom:24px;'>CASH FLOW MAP · TWO-PHASE ALLOCATION</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#7A9BBF; font-size:12px; letter-spacing:1px; margin-bottom:24px;'>CAPITAL DEPLOYMENT · TWO-PHASE ALLOCATION</p>", unsafe_allow_html=True)
 
     # ── ₹63L Capital Deployment (FD ladder) ──
     sip_deployed  = CAPITAL_PLAN['deployed_sip_l']
@@ -622,17 +619,6 @@ elif tab == "Plan":
         unsafe_allow_html=True
     )
 
-    # ── Cash Flow ──
-    st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ Cash Flow Map (8 Months)</p>", unsafe_allow_html=True)
-    cf_html = "<table class='static-table'><thead><tr><th>Month</th><th>Source</th><th>Inflow (₹L)</th><th>Notes</th></tr></thead><tbody>"
-    for _, r in cf.iterrows():
-        is_total = 'TOTAL' in str(r['Item'])
-        bold = "font-weight:700; color:#E2CC8A;" if is_total else ""
-        cf_html += f"<tr style='{bold}'><td>{r['Item']}</td><td>{r['Detail']}</td><td>{r['Amount (Rs L)']}</td><td>{r['Notes']}</td></tr>"
-    cf_html += "</tbody></table>"
-    st.markdown(cf_html, unsafe_allow_html=True)
-
     # ── Two-Phase Allocation ──
     st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
     st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ Two-Phase Allocation · Catch-up → De-risk</p>", unsafe_allow_html=True)
@@ -644,11 +630,9 @@ elif tab == "Plan":
             'subtitle': 'Target: 14-15% pre-tax',
             'note':     'Mid/smallcap has been ~flat for 2 years. Front-load equity to ride the mean-reversion.',
             'rows': [
-                ('Mid + Small Cap MF',     '50%', 'Mean-reversion bet · 2-yr flat → ~16-17%'),
-                ('Flexi Cap MF',           '25%', 'Active anchor · ~13-14%'),
-                ('Tactical Direct Equity', '10%', 'Energy + Pharma sectors · ~17-18%'),
-                ('International',          '10%', 'US/Global feeder · ~12%'),
-                ('Liquid Buffer',          '5%',  'Dry powder for dips · ~7%'),
+                ('Mid Cap Funds',                            '57%', 'Edelweiss + HDFC Mid Cap (active SIPs) · mean-reversion bet · ~16-17%'),
+                ('Small Cap Funds',                          '14%', 'Bandhan Small Cap (active SIP) · ~17-18%'),
+                ('Global Markets + Tactical Direct Equity',  '29%', 'Foreign feeders + Indian sectoral picks · ~13-15%'),
             ]
         },
         {
