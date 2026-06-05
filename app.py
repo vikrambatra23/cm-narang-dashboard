@@ -384,17 +384,32 @@ tab = st.radio("nav", ["Overview", "Legacy PF", "New", "Plan", "Protection", "Ac
 
 # ── 8. TABS ───────────────────────────────────────────────────────────────────
 if tab == "Overview":
-    # Use the overridden allocation map for Overview KPIs so totals + pie agree.
-    total_nw = sum(OVERVIEW_MAP.values())
-    cash_v   = OVERVIEW_MAP["Cash"]
-    deployed_v = total_nw - cash_v
-    k1, k2, k3 = st.columns(3)
+    # Fold New tab holdings (Coin MF SIPs + ICICI Direct equities) into the
+    # Overview allocation so the first page is the complete picture.
+    live_prices = fetch_live_rates()
+    inv_eq_new = sum(
+        qty * live_prices.get(sym.upper(), ltp)
+        for sym, name, kind, qty, buy, ltp, dt, plat, theme in NEW_LUMPSUM
+    )
+    inv_mf_new = sum(current for *_, current, _dt, _plat, _theme in NEW_MF_SIPS)
+
+    OVERVIEW_MAP = {
+        "Mutual Funds":    mf_v + inv_mf_new,
+        "Direct Equity":   equity_v + inv_eq_new,
+        "ETFs":            etf_v,
+        "Gold":            gold_v,
+        "Fixed Deposits":  1e7,
+    }
+    OVERVIEW_MAP = {k: v for k, v in OVERVIEW_MAP.items() if v > 0}
+
+    total_nw   = sum(OVERVIEW_MAP.values())
+    deployed_v = total_nw
+
+    k1, k2 = st.columns(2)
     with k1:
         st.markdown(f"<div class='kpi-tile'><span class='kpi-icon'>◈</span><p class='kpi-label'>Net Worth</p><p class='kpi-value'>{fmt_cr(total_nw)}</p></div>", unsafe_allow_html=True)
     with k2:
         st.markdown(f"<div class='kpi-tile'><span class='kpi-icon'>▲</span><p class='kpi-label'>Deployed Capital</p><p class='kpi-value'>{fmt_cr(deployed_v)}</p></div>", unsafe_allow_html=True)
-    with k3:
-        st.markdown(f"<div class='kpi-tile'><span class='kpi-icon'>✦</span><p class='kpi-label'>Cash · Ready to Deploy</p><p class='kpi-value'>{fmt_l(cash_v)}</p></div>", unsafe_allow_html=True)
 
     st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
 
@@ -419,9 +434,7 @@ if tab == "Overview":
     with c2:
         st.markdown("<p style='font-size:12px; color:#C8A84B; font-weight:600; letter-spacing:1px; margin-bottom:20px;'>ALLOCATION SUMMARY</p>", unsafe_allow_html=True)
         for label, val in OVERVIEW_MAP.items():
-            if val > 0:
-                badge = " <span style='background:rgba(87,199,133,0.15); color:#57C785; font-size:9px; padding:2px 8px; border-radius:10px; margin-left:8px; font-weight:600; letter-spacing:0.5px; vertical-align:middle;'>READY TO DEPLOY</span>" if label == "Cash" else ""
-                st.markdown(f"<div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid #1C3050; padding-bottom:6px;'><span>{label}{badge}</span><span style='font-family:\"JetBrains Mono\";'>{fmt_l(val)}</span></div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid #1C3050; padding-bottom:6px;'><span>{label}</span><span style='font-family:\"JetBrains Mono\";'>{fmt_l(val)}</span></div>", unsafe_allow_html=True)
 
 elif tab == "Legacy PF":
     st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px; margin-bottom:4px;'>Legacy Portfolio · Detailed Holdings</p>", unsafe_allow_html=True)
