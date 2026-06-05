@@ -641,11 +641,11 @@ elif tab == "Plan":
             'subtitle': 'Target: 11-12% pre-tax',
             'note':     'After Y1 catch-up, lock in gains and rebuild downside cushion. Same engine, lower beta.',
             'rows': [
-                ('Mid + Small Cap MF',     '35%', 'Trimmed from 50% · ~14%'),
-                ('Flexi Cap MF',           '30%', 'Increased anchor · ~12%'),
-                ('Large Cap Index',        '10%', 'NIFTYBEES + Junior · ~11%'),
-                ('International',          '10%', 'Hold steady · ~12%'),
-                ('Debt (Arbitrage+Bonds)', '15%', 'New cushion · ~7%'),
+                ('Mid Cap Funds',                            '35%', 'Trimmed from 57% · ~14%'),
+                ('Small Cap Funds',                          '10%', 'Trimmed from 14% · ~15%'),
+                ('Global Markets + Tactical Direct Equity',  '20%', 'Trimmed from 29% · ~13%'),
+                ('Large Cap Index',                          '15%', 'NIFTYBEES + Junior · new anchor · ~11%'),
+                ('Debt (Arbitrage + Bonds)',                 '20%', 'New downside cushion · ~7%'),
             ]
         }
     ]
@@ -677,8 +677,8 @@ elif tab == "Plan":
     <div style='background:rgba(200,168,75,0.08); border-left:3px solid #C8A84B; padding:14px 18px; border-radius:8px; margin-top:18px;'>
     <p style='color:#C8A84B; font-size:11px; letter-spacing:1.5px; margin:0 0 6px 0; font-weight:600;'>TRANSITION MECHANICS (END OF Y1)</p>
     <p style='color:#EAE3D6; font-size:12px; margin:0; line-height:1.6;'>
-    Trim Mid/Small <strong>50% → 35%</strong> (-15%), exit Tactical Equity <strong>10% → 0%</strong>, drain Liquid <strong>5% → 0%</strong>.
-    Redeploy 30% into: Flexi <strong>+5%</strong>, Large Cap Index <strong>+10%</strong>, Debt <strong>+15%</strong>.
+    Trim Mid Cap <strong>57% → 35%</strong> (-22%), Small Cap <strong>14% → 10%</strong> (-4%), Global + Tactical <strong>29% → 20%</strong> (-9%).
+    Redeploy 35% into: Large Cap Index <strong>+15%</strong>, Debt (Arbitrage + Bonds) <strong>+20%</strong>.
     Holdings sold after May 2027 qualify for LTCG @ 14.95% — modest tax cost in exchange for downside cushion entering Y2.
     </p>
     </div>
