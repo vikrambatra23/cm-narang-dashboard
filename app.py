@@ -303,7 +303,7 @@ def fetch_mf_navs():
 # that tab falls back to the hardcoded ltp below.
 NEW_LUMPSUM = [
     # symbol,        name,                            kind,     qty,    buy,     ltp,     date,         platform,        theme
-    ("AVANTIFEED",   "Avanti Feeds",                  "Equity", 72,     1417.00, 1417.90, "2026-05-11", "ICICI Direct",  "Animal protein · defensive"),
+    ("AVANTIFEED",   "Avanti Feeds",                  "Equity", 72,     1320.00, 1320.00, "2026-05-11", "ICICI Direct",  "Animal protein · defensive"),
     ("SOUTHBANK",    "South Indian Bank",             "Equity", 2400,   40.67,   40.65,   "2026-05-11", "ICICI Direct",  "PSU/private bank rerating"),
     ("COALINDIA",    "Coal India",                    "Equity", 217,    460.75,  460.70,  "2026-05-11", "ICICI Direct",  "Energy · high dividend"),
     ("MOTHERSON",    "Samvardhana Motherson",         "Equity", 760,    131.02,  130.87,  "2026-05-11", "ICICI Direct",  "Auto ancillary"),
