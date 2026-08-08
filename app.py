@@ -40,7 +40,7 @@ components.html(
         ensure('meta[name="theme-color"]', () => {
           const m = doc.createElement('meta');
           m.name = 'theme-color';
-          m.content = '#050A14';
+          m.content = '#061222';
           return m;
         });
         ensure('meta[name="apple-mobile-web-app-capable"]', () => {
@@ -81,8 +81,8 @@ components.html(
 # ── 2. ROYAL UI STYLING (CSS) ─────────────────────────────────────────────────
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono&display=swap');
-html, body, [class*="css"] { font-family: 'Inter', sans-serif; background-color: #050A14; }
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Hanken+Grotesk:wght@400;500;600;700&display=swap');
+html, body, [class*="css"] { font-family: 'Hanken Grotesk', system-ui, sans-serif; background-color: #061222; }
 #MainMenu, footer, header { visibility: hidden; }
 .stDeployButton { display: none; }
 .block-container { padding: 1.5rem 2rem 4rem 2rem; max-width: 1100px; }
@@ -90,12 +90,12 @@ html, body, [class*="css"] { font-family: 'Inter', sans-serif; background-color:
     background:
         radial-gradient(ellipse at top left, rgba(200,168,75,0.05) 0%, transparent 45%),
         radial-gradient(ellipse at bottom right, rgba(87,135,199,0.04) 0%, transparent 45%),
-        #050A14 !important;
+        #061222 !important;
 }
-p, div, span, label { color: #EAE3D6; }
+p, div, span, label { color: #F5F1E8; }
 
 .gold-text {
-    background: linear-gradient(to bottom, #C8A84B 0%, #E2CC8A 50%, #B38F36 100%);
+    background: linear-gradient(to bottom, #C9A24B 0%, #E3C88A 50%, #B38F36 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     font-weight: 700; font-size: 72px !important; letter-spacing: -2px; line-height: 1.1;
@@ -103,7 +103,7 @@ p, div, span, label { color: #EAE3D6; }
 
 .login-card {
     background: rgba(12, 26, 46, 0.85);
-    border: 1px solid #C8A84B;
+    border: 1px solid #C9A24B;
     border-radius: 20px;
     padding: 40px;
     box-shadow: 0 10px 40px rgba(200,168,75,0.15), inset 0 1px 0 rgba(226,204,138,0.1);
@@ -111,8 +111,8 @@ p, div, span, label { color: #EAE3D6; }
 }
 
 div.stButton > button:first-child {
-    background: linear-gradient(90deg, #C8A84B, #B38F36) !important;
-    color: #050A14 !important;
+    background: linear-gradient(90deg, #C9A24B, #B38F36) !important;
+    color: #061222 !important;
     font-weight: 700 !important;
     border: none !important;
     border-radius: 10px !important;
@@ -126,31 +126,31 @@ div.stButton > button:first-child:hover {
 }
 
 div[role="radiogroup"] label {
-    background: #0C1A2E !important; border: 1px solid #1C3050 !important;
+    background: #081A33 !important; border: 1px solid #1C3050 !important;
     border-radius: 12px !important; padding: 10px 24px !important; color: #5C7089 !important;
     transition: all 0.25s ease !important;
 }
-div[role="radiogroup"] label:hover { border-color: rgba(200,168,75,0.4) !important; color: #E2CC8A !important; }
+div[role="radiogroup"] label:hover { border-color: rgba(200,168,75,0.4) !important; color: #E3C88A !important; }
 div[role="radiogroup"] label:has(input:checked) {
-    background: rgba(200,168,75,0.12) !important; border-color: #C8A84B !important; color: #C8A84B !important;
+    background: rgba(200,168,75,0.12) !important; border-color: #C9A24B !important; color: #C9A24B !important;
     box-shadow: 0 0 18px rgba(200,168,75,0.15);
 }
 
 /* Header accent */
 .header-accent {
     height: 3px; width: 80px;
-    background: linear-gradient(90deg, #C8A84B, transparent);
+    background: linear-gradient(90deg, #C9A24B, transparent);
     border-radius: 2px; margin: 6px 0 0 0;
 }
 .monogram {
-    display: inline-block; color: #C8A84B; font-size: 34px;
+    display: inline-block; color: #C9A24B; font-size: 34px;
     margin-right: 14px; vertical-align: middle;
     filter: drop-shadow(0 0 10px rgba(200,168,75,0.35));
 }
 
 /* KPI Tiles */
 .kpi-tile {
-    background: linear-gradient(145deg, #0C1A2E 0%, #0A1528 100%);
+    background: linear-gradient(145deg, #081A33 0%, #0B2347 100%);
     border: 1px solid #1C3050;
     border-radius: 14px;
     padding: 18px 22px;
@@ -161,7 +161,7 @@ div[role="radiogroup"] label:has(input:checked) {
 .kpi-tile::before {
     content: ''; position: absolute;
     top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, transparent 0%, #C8A84B 50%, transparent 100%);
+    background: linear-gradient(90deg, transparent 0%, #C9A24B 50%, transparent 100%);
     opacity: 0.7;
 }
 .kpi-tile:hover {
@@ -170,8 +170,8 @@ div[role="radiogroup"] label:has(input:checked) {
     transform: translateY(-2px);
 }
 .kpi-label { color: #7A9BBF; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; margin: 0 0 8px 0; font-weight: 500; }
-.kpi-value { color: #E2CC8A; font-size: 24px; font-weight: 600; font-family: 'JetBrains Mono', monospace; margin: 0; }
-.kpi-icon { float: right; color: #C8A84B; font-size: 22px; opacity: 0.55; margin-top: -2px; }
+.kpi-value { color: #E3C88A; font-size: 24px; font-weight: 600; font-family: 'Fraunces', serif; margin: 0; }
+.kpi-icon { float: right; color: #C9A24B; font-size: 22px; opacity: 0.55; margin-top: -2px; }
 
 /* Section divider */
 .section-divider { display: flex; align-items: center; gap: 14px; margin: 32px 0 20px 0; }
@@ -179,24 +179,24 @@ div[role="radiogroup"] label:has(input:checked) {
     content: ''; flex: 1; height: 1px;
     background: linear-gradient(90deg, transparent, #1C3050 35%, #1C3050 65%, transparent);
 }
-.section-divider-mark { color: #C8A84B; font-size: 12px; letter-spacing: 6px; opacity: 0.8; }
+.section-divider-mark { color: #C9A24B; font-size: 12px; letter-spacing: 6px; opacity: 0.8; }
 
 /* Insurance cards */
 .insurance-card {
-    background: linear-gradient(145deg, #0C1A2E 0%, #0A1528 100%);
+    background: linear-gradient(145deg, #081A33 0%, #0B2347 100%);
     padding: 22px; border-radius: 14px; border: 1px solid #1C3050;
     transition: all 0.3s ease; position: relative; overflow: hidden;
 }
 .insurance-card::before {
     content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, #C8A84B, transparent);
+    background: linear-gradient(90deg, #C9A24B, transparent);
 }
 .insurance-card:hover {
     border-color: rgba(200,168,75,0.4);
     box-shadow: 0 6px 20px rgba(200,168,75,0.1);
     transform: translateY(-2px);
 }
-.insurance-icon { font-size: 22px; color: #C8A84B; opacity: 0.85; margin-bottom: 10px; display: block; }
+.insurance-icon { font-size: 22px; color: #C9A24B; opacity: 0.85; margin-bottom: 10px; display: block; }
 
 /* Action cards */
 .action-card {
@@ -208,7 +208,7 @@ div[role="radiogroup"] label:has(input:checked) {
     transition: all 0.3s ease;
 }
 .action-card:hover {
-    border-left-color: #C8A84B;
+    border-left-color: #C9A24B;
     background: linear-gradient(90deg, rgba(200,168,75,0.08) 0%, transparent 100%);
     transform: translateX(4px);
 }
@@ -216,8 +216,8 @@ div[role="radiogroup"] label:has(input:checked) {
     display: inline-flex;
     align-items: center; justify-content: center;
     width: 28px; height: 28px;
-    background: linear-gradient(135deg, #E2CC8A, #B38F36);
-    color: #050A14;
+    background: linear-gradient(135deg, #E3C88A, #B38F36);
+    color: #061222;
     border-radius: 50%;
     font-weight: 700; font-size: 12px;
     margin-right: 14px;
@@ -228,11 +228,11 @@ div[role="radiogroup"] label:has(input:checked) {
 
 /* Portfolio table polish */
 .static-table { width: 100%; border-collapse: collapse; margin-top: 20px; border-radius: 12px; overflow: hidden; }
-.static-table th { background: #0C1A2E; color: #C8A84B; text-align: left; padding: 15px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #C8A84B; }
-.static-table td { padding: 14px 15px; border-bottom: 1px solid #1C3050; font-size: 13px; color: #EAE3D6; }
+.static-table th { background: #081A33; color: #C9A24B; text-align: left; padding: 15px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #C9A24B; }
+.static-table td { padding: 14px 15px; border-bottom: 1px solid #1C3050; font-size: 13px; color: #F5F1E8; }
 .static-table tbody tr { transition: background 0.2s ease; }
 .static-table tbody tr:nth-child(even) td { background: rgba(12,26,46,0.35); }
-.static-table tbody tr:hover td { background: rgba(200,168,75,0.07); color: #E2CC8A; }
+.static-table tbody tr:hover td { background: rgba(200,168,75,0.07); color: #E3C88A; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -377,7 +377,7 @@ if not st.session_state.logged_in:
     st.write("##")
     _, col, _ = st.columns([1, 1.5, 1])
     with col:
-        st.markdown("<div class='login-card'><h2 style='color:#C8A84B; margin-bottom:0;'>◈ PRIVATE WEALTH</h2><p style='color:#7A9BBF; font-size:12px; letter-spacing:2px; margin-bottom:8px;'>CHANDRA MOHAN NARANG</p><p style='color:#7A9BBF; font-size:11px; letter-spacing:1.5px; margin-bottom:30px;'>ENTER 4-DIGIT ACCESS PIN</p></div>", unsafe_allow_html=True)
+        st.markdown("<div class='login-card'><h2 style='color:#C9A24B; margin-bottom:0;'>◈ PRIVATE WEALTH</h2><p style='color:#7A9BBF; font-size:12px; letter-spacing:2px; margin-bottom:8px;'>CHANDRA MOHAN NARANG</p><p style='color:#7A9BBF; font-size:11px; letter-spacing:1.5px; margin-bottom:30px;'>ENTER 4-DIGIT ACCESS PIN</p></div>", unsafe_allow_html=True)
         with st.form("pin_form", clear_on_submit=False):
             pin = st.text_input(
                 "Access PIN",
@@ -398,9 +398,9 @@ if not st.session_state.logged_in:
 # ── 7. HEADER ─────────────────────────────────────────────────────────────────
 col_h1, col_h2 = st.columns([2, 1])
 with col_h1:
-    st.markdown("<div style='display:flex; align-items:center;'><span class='monogram'>◈</span><div><h1 style='background: linear-gradient(90deg, #C8A84B, #E2CC8A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; font-size: 38px; margin:0; padding:0;'>Chandra Mohan Narang</h1><p style='color: #7A9BBF; font-size: 11px; text-transform: uppercase; letter-spacing: 2.5px; margin: 2px 0 0 0;'>Family Office Dashboard</p><div class='header-accent'></div></div></div>", unsafe_allow_html=True)
+    st.markdown("<div style='display:flex; align-items:center;'><span class='monogram'>◈</span><div><h1 style='background: linear-gradient(90deg, #C9A24B, #E3C88A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 700; font-size: 38px; margin:0; padding:0;'>Chandra Mohan Narang</h1><p style='color: #7A9BBF; font-size: 11px; text-transform: uppercase; letter-spacing: 2.5px; margin: 2px 0 0 0;'>Family Office Dashboard</p><div class='header-accent'></div></div></div>", unsafe_allow_html=True)
 with col_h2:
-    st.markdown(f"<div style='text-align: right; padding-top: 18px;'><p style='color: #5C7089; font-size: 10px; letter-spacing: 2px; margin-bottom: 2px;'>VALUATION DATE</p><p style='color: #EAE3D6; font-size: 14px; font-weight: 500; font-family: \"JetBrains Mono\", monospace;'>{pd.Timestamp.now().strftime('%d %B, %Y')}</p></div>", unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: right; padding-top: 18px;'><p style='color: #5C7089; font-size: 10px; letter-spacing: 2px; margin-bottom: 2px;'>VALUATION DATE</p><p style='color: #F5F1E8; font-size: 14px; font-weight: 500; font-family: \"Fraunces\", serif;'>{pd.Timestamp.now().strftime('%d %B, %Y')}</p></div>", unsafe_allow_html=True)
 
 st.markdown("<hr style='margin: 12px 0 18px 0; border: 0; border-top: 1px solid #1C3050;'>", unsafe_allow_html=True)
 tab = st.radio("nav", ["Overview", "Legacy PF", "New", "Plan", "Protection", "Actions"], horizontal=True, label_visibility="collapsed")
@@ -444,9 +444,9 @@ if tab == "Overview":
     fig_gauge = go.Figure(go.Indicator(
         mode = "gauge+number",
         value = total_nw / 10000000,
-        number = {'suffix': " Cr", 'font': {'color': '#E2CC8A', 'size': 50}},
+        number = {'suffix': " Cr", 'font': {'color': '#E3C88A', 'size': 50}},
         title = {'text': "GOAL PROGRESS: 10 CR JOURNEY", 'font': {'size': 12, 'color': '#7A9BBF'}},
-        gauge = {'axis': {'range': [0, 10], 'tickcolor': '#1C3050', 'tickfont': {'color': '#5C7089', 'size': 10}}, 'bar': {'color': "#C8A84B", 'thickness': 0.85}, 'bgcolor': "#0C1A2E", 'borderwidth': 0, 'steps': [{'range': [0, 10], 'color': '#0C1A2E'}], 'threshold': {'line': {'color': '#E2CC8A', 'width': 2}, 'thickness': 0.9, 'value': total_nw / 10000000}}
+        gauge = {'axis': {'range': [0, 10], 'tickcolor': '#1C3050', 'tickfont': {'color': '#5C7089', 'size': 10}}, 'bar': {'color': "#C9A24B", 'thickness': 0.85}, 'bgcolor': "#081A33", 'borderwidth': 0, 'steps': [{'range': [0, 10], 'color': '#081A33'}], 'threshold': {'line': {'color': '#E3C88A', 'width': 2}, 'thickness': 0.9, 'value': total_nw / 10000000}}
     ))
     fig_gauge.update_layout(height=300, paper_bgcolor='rgba(0,0,0,0)', margin=dict(t=50, b=20, l=20, r=20))
     st.plotly_chart(fig_gauge, use_container_width=True)
@@ -456,17 +456,17 @@ if tab == "Overview":
     c1, c2 = st.columns([1, 1])
     with c1:
         # Pie Chart with extra slice for Individual Stocks
-        fig = go.Figure(go.Pie(labels=list(OVERVIEW_MAP.keys()), values=list(OVERVIEW_MAP.values()), hole=0.7, marker=dict(colors=['#52A2FF','#FF8E52','#57C785','#E2CC8A','#46C1C1','#A37CFF'])))
+        fig = go.Figure(go.Pie(labels=list(OVERVIEW_MAP.keys()), values=list(OVERVIEW_MAP.values()), hole=0.7, marker=dict(colors=['#52A2FF','#FF8E52','#57C785','#E3C88A','#46C1C1','#A37CFF'])))
         fig.update_layout(showlegend=True, paper_bgcolor='rgba(0,0,0,0)', legend=dict(font=dict(color="#7A9BBF", size=10), orientation="h", y=-0.2), margin=dict(t=0,b=0,l=0,r=0))
         st.plotly_chart(fig, use_container_width=True)
     with c2:
-        st.markdown("<p style='font-size:12px; color:#C8A84B; font-weight:600; letter-spacing:1px; margin-bottom:20px;'>ALLOCATION SUMMARY</p>", unsafe_allow_html=True)
+        st.markdown("<p style='font-size:12px; color:#C9A24B; font-weight:600; letter-spacing:1px; margin-bottom:20px;'>ALLOCATION SUMMARY</p>", unsafe_allow_html=True)
         for label, val in OVERVIEW_MAP.items():
-            st.markdown(f"<div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid #1C3050; padding-bottom:6px;'><span>{label}</span><span style='font-family:\"JetBrains Mono\";'>{fmt_l(val)}</span></div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; border-bottom:1px solid #1C3050; padding-bottom:6px;'><span>{label}</span><span style='font-family:\"Fraunces\";'>{fmt_l(val)}</span></div>", unsafe_allow_html=True)
 
 elif tab == "Legacy PF":
-    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px; margin-bottom:4px;'>Legacy Portfolio · Detailed Holdings</p>", unsafe_allow_html=True)
-    st.markdown("<p style='color:#7A9BBF; font-size:11px; letter-spacing:1.5px; margin-bottom:18px;'>LEGACY BOOK · ICICI DIRECT (REGULAR PLANS) + EXISTING DIRECT EQUITY · POST-MAY-2026 PURCHASES TRACKED IN <strong style='color:#C8A84B;'>NEW</strong> TAB</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:20px; color:#C9A24B; font-weight:500; letter-spacing:0.5px; margin-bottom:4px;'>Legacy Portfolio · Detailed Holdings</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color:#7A9BBF; font-size:11px; letter-spacing:1.5px; margin-bottom:18px;'>LEGACY BOOK · ICICI DIRECT (REGULAR PLANS) + EXISTING DIRECT EQUITY · POST-MAY-2026 PURCHASES TRACKED IN <strong style='color:#C9A24B;'>NEW</strong> TAB</p>", unsafe_allow_html=True)
     disp = assets_df[['Asset Name', 'Category', 'Units / Qty', 'Current Value', 'Val_Num']].copy()
     disp = disp.sort_values(by='Val_Num', ascending=False)
     disp['Alloc %'] = (disp['Val_Num'] / total_nw * 100).round(1).astype(str) + '%'
@@ -525,7 +525,7 @@ elif tab == "New":
     pnl_total = cur_total - inv_total
     ret_total = (pnl_total / inv_total * 100) if inv_total else 0
 
-    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px; margin-bottom:4px;'>New Investments · Live Tracking</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:20px; color:#C9A24B; font-weight:500; letter-spacing:0.5px; margin-bottom:4px;'>New Investments · Live Tracking</p>", unsafe_allow_html=True)
     st.markdown("<p style='color:#7A9BBF; font-size:11px; letter-spacing:1.5px; margin-bottom:18px;'>POST 2026-05-11 · DIRECT-PLAN SIPs ON ZERODHA COIN · LUMP SUMS VIA ICICI DIRECT · ₹63L LADDER FUNDING THE SIPs (SEE PLAN TAB)</p>", unsafe_allow_html=True)
 
     # KPI Row
@@ -543,7 +543,7 @@ elif tab == "New":
 
     # ── MF SIPs table (Zerodha Coin · Direct Growth) ──
     st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 4px 0;'>◈ MF SIPs · Zerodha Coin (Direct Plans)</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:14px; color:#C9A24B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 4px 0;'>◈ MF SIPs · Zerodha Coin (Direct Plans)</p>", unsafe_allow_html=True)
     if nav_as_of:
         st.markdown(f"<p style='color:#57C785; font-size:10px; letter-spacing:1.2px; margin:0 0 12px 0;'>● LIVE · NAVs as of {nav_as_of} (AMFI via mfapi.in)</p>", unsafe_allow_html=True)
     else:
@@ -555,30 +555,30 @@ elif tab == "New":
         mf_html += (
             f"<tr><td><strong>{r['name']}</strong><br><span style='color:#7A9BBF; font-size:10px;'>{r['theme']}</span></td>"
             f"<td style='color:#7A9BBF; font-size:11px;'>{r['category']}</td>"
-            f"<td style='font-family:\"JetBrains Mono\";'>{r['units']:.4f}</td>"
-            f"<td style='font-family:\"JetBrains Mono\";'>{r['avg_nav']:.2f}</td>"
-            f"<td style='font-family:\"JetBrains Mono\";'>{r['nav']:.4f}</td>"
+            f"<td style='font-family:\"Fraunces\";'>{r['units']:.4f}</td>"
+            f"<td style='font-family:\"Fraunces\";'>{r['avg_nav']:.2f}</td>"
+            f"<td style='font-family:\"Fraunces\";'>{r['nav']:.4f}</td>"
             f"<td>{fmt_l(r['invested'])}</td>"
             f"<td>{fmt_l(r['current'])}</td>"
-            f"<td style='color:{rc}; font-family:\"JetBrains Mono\"; font-weight:600;'>{rs}{r['ret']:.2f}%</td>"
-            f"<td style='font-family:\"JetBrains Mono\";'>{r['days']}d</td></tr>"
+            f"<td style='color:{rc}; font-family:\"Fraunces\"; font-weight:600;'>{rs}{r['ret']:.2f}%</td>"
+            f"<td style='font-family:\"Fraunces\";'>{r['days']}d</td></tr>"
         )
     sub_c_mf = "#57C785" if ret_mf >= 0 else "#FF6B6B"
     sub_s_mf = "+" if ret_mf >= 0 else ""
     mf_html += (
-        f"<tr style='font-weight:700; color:#E2CC8A;'>"
-        f"<td colspan='5' style='border-top:2px solid #C8A84B;'>SUBTOTAL · {len(mf_rows)} FUNDS</td>"
-        f"<td style='border-top:2px solid #C8A84B;'>{fmt_l(inv_mf)}</td>"
-        f"<td style='border-top:2px solid #C8A84B;'>{fmt_l(cur_mf)}</td>"
-        f"<td style='color:{sub_c_mf}; border-top:2px solid #C8A84B;'>{sub_s_mf}{ret_mf:.2f}%</td>"
-        f"<td style='border-top:2px solid #C8A84B;'>—</td></tr>"
+        f"<tr style='font-weight:700; color:#E3C88A;'>"
+        f"<td colspan='5' style='border-top:2px solid #C9A24B;'>SUBTOTAL · {len(mf_rows)} FUNDS</td>"
+        f"<td style='border-top:2px solid #C9A24B;'>{fmt_l(inv_mf)}</td>"
+        f"<td style='border-top:2px solid #C9A24B;'>{fmt_l(cur_mf)}</td>"
+        f"<td style='color:{sub_c_mf}; border-top:2px solid #C9A24B;'>{sub_s_mf}{ret_mf:.2f}%</td>"
+        f"<td style='border-top:2px solid #C9A24B;'>—</td></tr>"
     )
     mf_html += "</tbody></table>"
     st.markdown(mf_html, unsafe_allow_html=True)
 
     # ── Direct Equity table ──
     st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ Direct Equity · ICICI Direct</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:14px; color:#C9A24B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ Direct Equity · ICICI Direct</p>", unsafe_allow_html=True)
     eq_html = "<table class='static-table'><thead><tr><th>Symbol</th><th>Theme</th><th>Qty</th><th>Buy ₹</th><th>LTP ₹</th><th>Invested</th><th>Current</th><th>Return</th><th>Held</th></tr></thead><tbody>"
     for r in eq:
         rc = "#57C785" if r['ret'] >= 0 else "#FF6B6B"
@@ -587,41 +587,41 @@ elif tab == "New":
             f"<tr><td><strong>{r['symbol']}</strong><br><span style='color:#7A9BBF; font-size:10px;'>{r['name']}</span></td>"
             f"<td style='color:#7A9BBF; font-size:11px;'>{r['theme']}</td>"
             f"<td>{r['qty']}</td>"
-            f"<td style='font-family:\"JetBrains Mono\";'>{r['buy']:.2f}</td>"
-            f"<td style='font-family:\"JetBrains Mono\";'>{r['ltp']:.2f}</td>"
+            f"<td style='font-family:\"Fraunces\";'>{r['buy']:.2f}</td>"
+            f"<td style='font-family:\"Fraunces\";'>{r['ltp']:.2f}</td>"
             f"<td>{fmt_l(r['invested'])}</td>"
             f"<td>{fmt_l(r['current'])}</td>"
-            f"<td style='color:{rc}; font-family:\"JetBrains Mono\"; font-weight:600;'>{rs}{r['ret']:.2f}%</td>"
-            f"<td style='font-family:\"JetBrains Mono\";'>{r['days']}d</td></tr>"
+            f"<td style='color:{rc}; font-family:\"Fraunces\"; font-weight:600;'>{rs}{r['ret']:.2f}%</td>"
+            f"<td style='font-family:\"Fraunces\";'>{r['days']}d</td></tr>"
         )
     sub_c = "#57C785" if ret_eq >= 0 else "#FF6B6B"
     sub_s = "+" if ret_eq >= 0 else ""
     eq_html += (
-        f"<tr style='font-weight:700; color:#E2CC8A;'>"
-        f"<td colspan='5' style='border-top:2px solid #C8A84B;'>SUBTOTAL · {len(eq)} HOLDINGS</td>"
-        f"<td style='border-top:2px solid #C8A84B;'>{fmt_l(inv_eq)}</td>"
-        f"<td style='border-top:2px solid #C8A84B;'>{fmt_l(cur_eq)}</td>"
-        f"<td style='color:{sub_c}; border-top:2px solid #C8A84B;'>{sub_s}{ret_eq:.2f}%</td>"
-        f"<td style='border-top:2px solid #C8A84B;'>—</td></tr>"
+        f"<tr style='font-weight:700; color:#E3C88A;'>"
+        f"<td colspan='5' style='border-top:2px solid #C9A24B;'>SUBTOTAL · {len(eq)} HOLDINGS</td>"
+        f"<td style='border-top:2px solid #C9A24B;'>{fmt_l(inv_eq)}</td>"
+        f"<td style='border-top:2px solid #C9A24B;'>{fmt_l(cur_eq)}</td>"
+        f"<td style='color:{sub_c}; border-top:2px solid #C9A24B;'>{sub_s}{ret_eq:.2f}%</td>"
+        f"<td style='border-top:2px solid #C9A24B;'>—</td></tr>"
     )
     eq_html += "</tbody></table>"
     st.markdown(eq_html, unsafe_allow_html=True)
 
     # Segregation footer
     st.markdown("""
-    <div style='background:rgba(200,168,75,0.08); border-left:3px solid #C8A84B; padding:14px 18px; border-radius:8px; margin-top:24px;'>
-    <p style='color:#C8A84B; font-size:11px; letter-spacing:1.5px; margin:0 0 6px 0; font-weight:600;'>SEGREGATION</p>
-    <p style='color:#EAE3D6; font-size:12px; margin:0; line-height:1.65;'>
+    <div style='background:rgba(200,168,75,0.08); border-left:3px solid #C9A24B; padding:14px 18px; border-radius:8px; margin-top:24px;'>
+    <p style='color:#C9A24B; font-size:11px; letter-spacing:1.5px; margin:0 0 6px 0; font-weight:600;'>SEGREGATION</p>
+    <p style='color:#F5F1E8; font-size:12px; margin:0; line-height:1.65;'>
     This view tracks <strong>only new investments made from 2026-05-11 onwards</strong>. Legacy holdings —
-    existing Regular-plan MFs, older direct equity, FDs, gold — continue to live in the <strong style='color:#C8A84B;'>Legacy PF</strong> tab from the master Google Sheet.
-    Monthly SIP tranches are funded by a <strong>₹63L FD ladder</strong> in the bank account (one maturity / month, Jun 2026 → Feb 2027) — full schedule in the <strong style='color:#C8A84B;'>Plan</strong> tab.
+    existing Regular-plan MFs, older direct equity, FDs, gold — continue to live in the <strong style='color:#C9A24B;'>Legacy PF</strong> tab from the master Google Sheet.
+    Monthly SIP tranches are funded by a <strong>₹63L FD ladder</strong> in the bank account (one maturity / month, Jun 2026 → Feb 2027) — full schedule in the <strong style='color:#C9A24B;'>Plan</strong> tab.
     </p>
     </div>
     """, unsafe_allow_html=True)
 
 elif tab == "Plan":
     # ── Hero summary ──
-    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px; margin-bottom:4px;'>Strategic Plan · 5-Year Horizon</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:20px; color:#C9A24B; font-weight:500; letter-spacing:0.5px; margin-bottom:4px;'>Strategic Plan · 5-Year Horizon</p>", unsafe_allow_html=True)
     st.markdown("<p style='color:#7A9BBF; font-size:12px; letter-spacing:1px; margin-bottom:24px;'>CAPITAL DEPLOYMENT · TWO-PHASE ALLOCATION</p>", unsafe_allow_html=True)
 
     # ── ₹63L Capital Deployment (FD ladder) ──
@@ -633,34 +633,34 @@ elif tab == "Plan":
     stag_pool    = CAPITAL_PLAN['monthly_stag_l'] * CAPITAL_PLAN['duration_mo']
     overall_pct  = (total_deployed / total_pool * 100) if total_pool else 0
 
-    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ Capital Deployment · ₹63L Over 9 Months</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:14px; color:#C9A24B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ Capital Deployment · ₹63L Over 9 Months</p>", unsafe_allow_html=True)
     st.markdown(
         f"<div class='insurance-card'>"
         f"<div style='display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px;'>"
-        f"<span style='background:rgba(200,168,75,0.12); color:#E2CC8A; font-size:11px; padding:6px 12px; border-radius:14px; letter-spacing:0.5px; font-weight:600;'>₹{CAPITAL_PLAN['source_savings']:.0f}L Savings</span>"
+        f"<span style='background:rgba(200,168,75,0.12); color:#E3C88A; font-size:11px; padding:6px 12px; border-radius:14px; letter-spacing:0.5px; font-weight:600;'>₹{CAPITAL_PLAN['source_savings']:.0f}L Savings</span>"
         f"<span style='color:#7A9BBF; font-size:11px; align-self:center;'>+</span>"
-        f"<span style='background:rgba(200,168,75,0.12); color:#E2CC8A; font-size:11px; padding:6px 12px; border-radius:14px; letter-spacing:0.5px; font-weight:600;'>₹{CAPITAL_PLAN['source_fd_jun']:.0f}L Jun-FD Maturity</span>"
+        f"<span style='background:rgba(200,168,75,0.12); color:#E3C88A; font-size:11px; padding:6px 12px; border-radius:14px; letter-spacing:0.5px; font-weight:600;'>₹{CAPITAL_PLAN['source_fd_jun']:.0f}L Jun-FD Maturity</span>"
         f"<span style='color:#7A9BBF; font-size:11px; align-self:center;'>→</span>"
-        f"<span style='background:linear-gradient(90deg, #C8A84B, #E2CC8A); color:#0A1528; font-size:11px; padding:6px 14px; border-radius:14px; letter-spacing:0.5px; font-weight:700;'>₹{CAPITAL_PLAN['total_l']:.0f}L TOTAL</span>"
+        f"<span style='background:linear-gradient(90deg, #C9A24B, #E3C88A); color:#0B2347; font-size:11px; padding:6px 14px; border-radius:14px; letter-spacing:0.5px; font-weight:700;'>₹{CAPITAL_PLAN['total_l']:.0f}L TOTAL</span>"
         f"</div>"
         f"<p style='color:#7A9BBF; font-size:11px; line-height:1.6; margin:6px 0 18px 0; font-style:italic;'>"
-        f"₹{CAPITAL_PLAN['total_l']:.0f}L parked as <strong style='color:#EAE3D6;'>{CAPITAL_PLAN['duration_mo']} monthly-maturity FDs</strong> in the bank account; one FD matures each month from "
-        f"<strong style='color:#EAE3D6;'>{CAPITAL_PLAN['start']} → {CAPITAL_PLAN['end']}</strong>, releasing ~₹{CAPITAL_PLAN['monthly_l']:.0f}L. "
-        f"<strong style='color:#EAE3D6;'>₹{CAPITAL_PLAN['monthly_sip_l']:.0f}L</strong> routes to MF SIPs on Coin, "
-        f"<strong style='color:#EAE3D6;'>₹{CAPITAL_PLAN['monthly_stag_l']:.0f}L</strong> deployed opportunistically into foreign funds + Indian direct equity."
+        f"₹{CAPITAL_PLAN['total_l']:.0f}L parked as <strong style='color:#F5F1E8;'>{CAPITAL_PLAN['duration_mo']} monthly-maturity FDs</strong> in the bank account; one FD matures each month from "
+        f"<strong style='color:#F5F1E8;'>{CAPITAL_PLAN['start']} → {CAPITAL_PLAN['end']}</strong>, releasing ~₹{CAPITAL_PLAN['monthly_l']:.0f}L. "
+        f"<strong style='color:#F5F1E8;'>₹{CAPITAL_PLAN['monthly_sip_l']:.0f}L</strong> routes to MF SIPs on Coin, "
+        f"<strong style='color:#F5F1E8;'>₹{CAPITAL_PLAN['monthly_stag_l']:.0f}L</strong> deployed opportunistically into foreign funds + Indian direct equity."
         f"</p>"
         f"<div style='border-top:1px solid #1C3050; padding-top:14px;'>"
         f"<div style='display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;'>"
-        f"<p style='color:#C8A84B; font-size:11px; letter-spacing:1.5px; margin:0; font-weight:600;'>OVERALL DEPLOYMENT PROGRESS</p>"
-        f"<p style='font-family:\"JetBrains Mono\"; color:#E2CC8A; font-size:14px; margin:0; font-weight:600;'>{overall_pct:.1f}%</p>"
+        f"<p style='color:#C9A24B; font-size:11px; letter-spacing:1.5px; margin:0; font-weight:600;'>OVERALL DEPLOYMENT PROGRESS</p>"
+        f"<p style='font-family:\"Fraunces\"; color:#E3C88A; font-size:14px; margin:0; font-weight:600;'>{overall_pct:.1f}%</p>"
         f"</div>"
-        f"<div style='background:#0A1528; height:12px; border-radius:6px; overflow:hidden; border:1px solid #1C3050;'>"
-        f"<div style='height:100%; width:{overall_pct}%; background:linear-gradient(90deg, #C8A84B, #E2CC8A); box-shadow: 0 0 12px rgba(200,168,75,0.4);'></div>"
+        f"<div style='background:#0B2347; height:12px; border-radius:6px; overflow:hidden; border:1px solid #1C3050;'>"
+        f"<div style='height:100%; width:{overall_pct}%; background:linear-gradient(90deg, #C9A24B, #E3C88A); box-shadow: 0 0 12px rgba(200,168,75,0.4);'></div>"
         f"</div>"
         f"<div style='display:flex; justify-content:space-between; margin-top:10px; gap:12px;'>"
         f"<p style='color:#7A9BBF; font-size:10px; margin:0;'>SIP: <strong style='color:#57C785;'>₹{sip_deployed:.1f}L</strong> / ₹{sip_pool:.0f}L</p>"
-        f"<p style='color:#7A9BBF; font-size:10px; margin:0;'>Staggered: <strong style='color:#E2CC8A;'>₹{stag_deployed:.1f}L</strong> / ₹{stag_pool:.0f}L</p>"
-        f"<p style='color:#7A9BBF; font-size:10px; margin:0; text-align:right;'>Remaining: <strong style='color:#EAE3D6;'>₹{total_pool - total_deployed:.1f}L</strong></p>"
+        f"<p style='color:#7A9BBF; font-size:10px; margin:0;'>Staggered: <strong style='color:#E3C88A;'>₹{stag_deployed:.1f}L</strong> / ₹{stag_pool:.0f}L</p>"
+        f"<p style='color:#7A9BBF; font-size:10px; margin:0; text-align:right;'>Remaining: <strong style='color:#F5F1E8;'>₹{total_pool - total_deployed:.1f}L</strong></p>"
         f"</div>"
         f"</div>"
         f"</div>",
@@ -669,7 +669,7 @@ elif tab == "Plan":
 
     # ── Two-Phase Allocation ──
     st.markdown("<div class='section-divider'><span class='section-divider-mark'>◆ ◆ ◆</span></div>", unsafe_allow_html=True)
-    st.markdown("<p style='font-size:14px; color:#C8A84B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ Two-Phase Allocation · Catch-up → De-risk</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:14px; color:#C9A24B; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; margin:8px 0 12px 0;'>◈ Two-Phase Allocation · Catch-up → De-risk</p>", unsafe_allow_html=True)
 
     PHASES = [
         {
@@ -702,8 +702,8 @@ elif tab == "Plan":
     for col, phase in zip(cols, PHASES):
         body = "".join([
             f"<div style='display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #1C3050;'>"
-            f"<span style='font-size:12px; color:#EAE3D6;'>{item}</span>"
-            f"<span style='font-size:12px; color:#C8A84B; font-family:\"JetBrains Mono\"; font-weight:600;'>{detail}</span>"
+            f"<span style='font-size:12px; color:#F5F1E8;'>{item}</span>"
+            f"<span style='font-size:12px; color:#C9A24B; font-family:\"Fraunces\"; font-weight:600;'>{detail}</span>"
             f"</div>"
             f"<p style='font-size:10px; color:#7A9BBF; margin:2px 0 8px 0; line-height:1.4;'>{note}</p>"
             for item, detail, note in phase['rows']
@@ -712,8 +712,8 @@ elif tab == "Plan":
             st.markdown(
                 f"<div class='insurance-card' style='min-height:100%;'>"
                 f"<p style='color:#7A9BBF; font-size:10px; letter-spacing:2px; margin:0;'>{phase['tag']}</p>"
-                f"<h3 style='margin:4px 0 4px 0; font-size:16px; color:#C8A84B; font-weight:700;'>{phase['title']}</h3>"
-                f"<p style='color:#E2CC8A; font-size:13px; font-family:\"JetBrains Mono\"; margin:0 0 8px 0;'>{phase['subtitle']}</p>"
+                f"<h3 style='margin:4px 0 4px 0; font-size:16px; color:#C9A24B; font-weight:700;'>{phase['title']}</h3>"
+                f"<p style='color:#E3C88A; font-size:13px; font-family:\"Fraunces\"; margin:0 0 8px 0;'>{phase['subtitle']}</p>"
                 f"<p style='color:#7A9BBF; font-size:11px; margin:0 0 14px 0; line-height:1.5; font-style:italic;'>{phase['note']}</p>"
                 f"{body}"
                 f"</div>",
@@ -722,9 +722,9 @@ elif tab == "Plan":
 
     # Transition mechanics note
     st.markdown("""
-    <div style='background:rgba(200,168,75,0.08); border-left:3px solid #C8A84B; padding:14px 18px; border-radius:8px; margin-top:18px;'>
-    <p style='color:#C8A84B; font-size:11px; letter-spacing:1.5px; margin:0 0 6px 0; font-weight:600;'>TRANSITION MECHANICS (END OF Y1)</p>
-    <p style='color:#EAE3D6; font-size:12px; margin:0; line-height:1.6;'>
+    <div style='background:rgba(200,168,75,0.08); border-left:3px solid #C9A24B; padding:14px 18px; border-radius:8px; margin-top:18px;'>
+    <p style='color:#C9A24B; font-size:11px; letter-spacing:1.5px; margin:0 0 6px 0; font-weight:600;'>TRANSITION MECHANICS (END OF Y1)</p>
+    <p style='color:#F5F1E8; font-size:12px; margin:0; line-height:1.6;'>
     Trim Mid Cap <strong>57% → 35%</strong> (-22%), Small Cap <strong>14% → 10%</strong> (-4%), Global + Tactical <strong>29% → 20%</strong> (-9%).
     Redeploy 35% into: Large Cap Index <strong>+15%</strong>, Debt (Arbitrage + Bonds) <strong>+20%</strong>.
     Holdings sold after May 2027 qualify for LTCG @ 14.95% — modest tax cost in exchange for downside cushion entering Y2.
@@ -734,30 +734,30 @@ elif tab == "Plan":
 
     # ── Footnote ──
     st.markdown("""
-    <div style='background:rgba(200,168,75,0.08); border-left:3px solid #C8A84B; padding:14px 18px; border-radius:8px; margin-top:24px;'>
-    <p style='color:#C8A84B; font-size:11px; letter-spacing:1.5px; margin:0 0 6px 0; font-weight:600;'>DEPLOYMENT NOTE</p>
-    <p style='color:#EAE3D6; font-size:12px; margin:0; line-height:1.6;'>Lump-sum maturities (₹52L Dec FD) routed via <strong>STP over 12 months</strong>; monthly ₹5L surplus deployed as fresh SIP per the Phase 1 weights, transitioning to Phase 2 from Apr 2027. Existing ₹1L Aggressive (Top 3) SIP continues unchanged.</p>
+    <div style='background:rgba(200,168,75,0.08); border-left:3px solid #C9A24B; padding:14px 18px; border-radius:8px; margin-top:24px;'>
+    <p style='color:#C9A24B; font-size:11px; letter-spacing:1.5px; margin:0 0 6px 0; font-weight:600;'>DEPLOYMENT NOTE</p>
+    <p style='color:#F5F1E8; font-size:12px; margin:0; line-height:1.6;'>Lump-sum maturities (₹52L Dec FD) routed via <strong>STP over 12 months</strong>; monthly ₹5L surplus deployed as fresh SIP per the Phase 1 weights, transitioning to Phase 2 from Apr 2027. Existing ₹1L Aggressive (Top 3) SIP continues unchanged.</p>
     </div>
     """, unsafe_allow_html=True)
 
 elif tab == "Protection":
-    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px;'>Term Life Protection</p>", unsafe_allow_html=True)
-    st.markdown("<div class='insurance-card' style='padding:28px;'><span class='insurance-icon'>◈</span><p style='color:#7A9BBF; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; margin:0 0 6px 0;'>Sum Insured</p><h2 style='margin:0; font-size:32px; background: linear-gradient(90deg, #C8A84B, #E2CC8A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight:700;'>₹1.00 Crore</h2><p style='color:#C8A84B; font-size:11px; margin-top:8px; letter-spacing:0.5px;'>Primary Policy · Nominee: Ritu Narang</p></div>", unsafe_allow_html=True)
-    st.markdown("<br><p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px;'>Family Health Shield</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:20px; color:#C9A24B; font-weight:500; letter-spacing:0.5px;'>Term Life Protection</p>", unsafe_allow_html=True)
+    st.markdown("<div class='insurance-card' style='padding:28px;'><span class='insurance-icon'>◈</span><p style='color:#7A9BBF; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; margin:0 0 6px 0;'>Sum Insured</p><h2 style='margin:0; font-size:32px; background: linear-gradient(90deg, #C9A24B, #E3C88A); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight:700;'>₹1.00 Crore</h2><p style='color:#C9A24B; font-size:11px; margin-top:8px; letter-spacing:0.5px;'>Primary Policy · Nominee: Ritu Narang</p></div>", unsafe_allow_html=True)
+    st.markdown("<br><p style='font-size:20px; color:#C9A24B; font-weight:500; letter-spacing:0.5px;'>Family Health Shield</p>", unsafe_allow_html=True)
     h1, h2 = st.columns(2)
-    with h1: st.markdown("<div class='insurance-card'><span class='insurance-icon'>✦</span><p style='color:#7A9BBF; font-size:11px; letter-spacing:1px; text-transform:uppercase; margin:0 0 4px 0;'>Star Comprehensive</p><p style='font-size:20px; margin:0; font-weight:600; font-family:\"JetBrains Mono\", monospace; color:#EAE3D6;'>₹20.0 L</p></div>", unsafe_allow_html=True)
-    with h2: st.markdown("<div class='insurance-card'><span class='insurance-icon'>✦</span><p style='color:#7A9BBF; font-size:11px; letter-spacing:1px; text-transform:uppercase; margin:0 0 4px 0;'>Niva Bupa ReAssure 2.0</p><p style='font-size:20px; margin:0; font-weight:600; font-family:\"JetBrains Mono\", monospace; color:#EAE3D6;'>₹10.0 L</p></div>", unsafe_allow_html=True)
+    with h1: st.markdown("<div class='insurance-card'><span class='insurance-icon'>✦</span><p style='color:#7A9BBF; font-size:11px; letter-spacing:1px; text-transform:uppercase; margin:0 0 4px 0;'>Star Comprehensive</p><p style='font-size:20px; margin:0; font-weight:600; font-family:\"Fraunces\", serif; color:#F5F1E8;'>₹20.0 L</p></div>", unsafe_allow_html=True)
+    with h2: st.markdown("<div class='insurance-card'><span class='insurance-icon'>✦</span><p style='color:#7A9BBF; font-size:11px; letter-spacing:1px; text-transform:uppercase; margin:0 0 4px 0;'>Niva Bupa ReAssure 2.0</p><p style='font-size:20px; margin:0; font-weight:600; font-family:\"Fraunces\", serif; color:#F5F1E8;'>₹10.0 L</p></div>", unsafe_allow_html=True)
 
     st.markdown("""
-    <div style='background:rgba(200,168,75,0.08); border-left:3px solid #C8A84B; padding:16px 20px; border-radius:8px; margin-top:24px;'>
-    <p style='color:#C8A84B; font-size:11px; letter-spacing:1.5px; margin:0 0 8px 0; font-weight:600;'>ADVISORY NOTE</p>
-    <p style='color:#EAE3D6; font-size:13px; margin:0; line-height:1.6;'>Current health cover stands at <strong>₹30 L</strong>; recommended total exposure is closer to <strong>₹1 Crore</strong>. We recommend adding a <strong>₹30 L HDFC ERGO Optima Secure</strong> policy, which provides <strong>₹60 L effective cover from Day 1<sup style='color:#C8A84B;'>*</sup></strong>.</p>
+    <div style='background:rgba(200,168,75,0.08); border-left:3px solid #C9A24B; padding:16px 20px; border-radius:8px; margin-top:24px;'>
+    <p style='color:#C9A24B; font-size:11px; letter-spacing:1.5px; margin:0 0 8px 0; font-weight:600;'>ADVISORY NOTE</p>
+    <p style='color:#F5F1E8; font-size:13px; margin:0; line-height:1.6;'>Current health cover stands at <strong>₹30 L</strong>; recommended total exposure is closer to <strong>₹1 Crore</strong>. We recommend adding a <strong>₹30 L HDFC ERGO Optima Secure</strong> policy, which provides <strong>₹60 L effective cover from Day 1<sup style='color:#C9A24B;'>*</sup></strong>.</p>
     <p style='color:#7A9BBF; font-size:10px; margin:10px 0 0 0; font-style:italic;'>* Day-1 enhanced cover feature to be verified with the HDFC ERGO agent.</p>
     </div>
     """, unsafe_allow_html=True)
 
 elif tab == "Actions":
-    st.markdown("<p style='font-size:20px; color:#C8A84B; font-weight:500; letter-spacing:0.5px;'>Strategic Actions</p>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size:20px; color:#C9A24B; font-weight:500; letter-spacing:0.5px;'>Strategic Actions</p>", unsafe_allow_html=True)
     actions = [
         ("Legacy Exit Strategy", "Phase out of Satellite MFs over the next 5 years in a tax-efficient manner.", "Vikram Batra"),
         ("Health Cover Expansion", "Obtain quotes and initiate an additional ₹30 L base HDFC ERGO Optima Secure policy.", "CM Narang"),
@@ -768,11 +768,11 @@ elif tab == "Actions":
             f"<div style='display:flex; justify-content:space-between; align-items:flex-start;'>"
             f"<div style='display:flex; align-items:center; flex:1;'>"
             f"<span class='action-number'>{i}</span>"
-            f"<span style='color:#C8A84B; font-weight:600; font-size:15px; letter-spacing:0.3px;'>{act}</span>"
+            f"<span style='color:#C9A24B; font-weight:600; font-size:15px; letter-spacing:0.3px;'>{act}</span>"
             f"</div>"
             f"<span style='color:#7A9BBF; font-size:10px; letter-spacing:1.2px; text-transform:uppercase; padding-top:8px; white-space:nowrap;'>{owner}</span>"
             f"</div>"
-            f"<p style='font-size:13px; color:#EAE3D6; margin:10px 0 0 42px; line-height:1.65;'>{desc}</p>"
+            f"<p style='font-size:13px; color:#F5F1E8; margin:10px 0 0 42px; line-height:1.65;'>{desc}</p>"
             f"</div>",
             unsafe_allow_html=True
         )
